@@ -1,0 +1,50 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client-js"
+  
+  
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum AuditStatus {
+  pending
+  processing
+  completed
+  failed
+}
+model Audit {
+  id                    String      @id @default(uuid())
+  status                AuditStatus @default(pending)
+  
+  // Input fields
+  input_tool            String
+  input_team_size       Int
+  input_plan            String
+  input_billing         Decimal
+  input_tasks           String      @db.Text
+  input_email           String
+  input_company         String
+  
+  // Output fields
+  output_spend          Decimal?
+  output_recommendation String?     @db.Text
+  output_savings_reason String?     @db.Text
+  output_monthly_saving Decimal?
+  output_annual_saving  Decimal?
+  
+  // Error handling
+  error_message         String?     @db.Text
+  
+  // Metadata & Raw Data
+  llm_raw_response      Json?
+  created_at            DateTime    @default(now())
+  completed_at          DateTime?
+  @@map("audits") // Maps the model to the "audits" table in Postgres
+}
