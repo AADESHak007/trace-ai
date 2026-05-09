@@ -13,3 +13,15 @@
     > [!IMPORTANT]
     > This logic is currently in a "draft" state. It requires significant additional time and iteration to ensure it can handle various edge cases and provide finalized, accurate results.
 - **API Foundation**: Developed and tested the core `v1/audit` API routes to handle incoming form data and generate initial job IDs.
+
+## DAY 03 — 09.05.2026
+- brainstormed on the more factors and finally designed an SOP 
+- will impelement the engine later
+- researched on the trade offs between using the redis + bull MQ setup and upstash . But gave importance to scale and cost effectiveness and decided to use REDIS + BULL MQ 
+- setted up redis and bull MQ setup and tested it locally 
+- used a docker compose file for local redis instance 
+- updated the audit api to finally save the inputs in the DB and using the id we add the job to the queue . 
+- tested the functionality locally and pushed the code to github . 
+
+**Tomorrow's Goal :**
+implementing the audit engine and completing the backend flow .
