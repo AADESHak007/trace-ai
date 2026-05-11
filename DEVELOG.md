@@ -70,3 +70,22 @@
 **Blockers / what I'm stuck on:** None — everything went smoothly today.
 
 **Plan for tomorrow:** Polish the landing page UI, build the Audit Form, and design the results dashboard.
+
+---
+
+## Day 05 — 2026-05-11
+**Hours worked:** ~5
+
+**What I did:**
+- Redesigned the UI of the landing page.
+- Created the audit page with the form.
+- Connected the APIs and tested them out.
+
+**What I learned:** Successfully integrated the frontend with the status polling system, ensuring a smooth transition from form submission to audit results.
+
+**Blockers / what I'm stuck on:** None — core audit flow is now fully operational.
+
+**Plan for tomorrow:**
+- Implement Zod types for additional input validation.
+- Conduct interviews to gather more user feedback.
+- Integrate LLM-driven analysis into the audit engine.
