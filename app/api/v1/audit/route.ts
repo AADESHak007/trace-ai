@@ -1,13 +1,35 @@
 import { prisma } from "@/lib/prisma";
-import { auditQueue } from "@/lib/queue";
+import { auditQueue, connection } from "@/lib/queue";
 import { NextResponse } from "next/server";
 
 
 export  async function POST(req:Request){
 try {
         
-        //get the reqd response from body
-        const {tool , teamSize , plan ,billing ,actualBilling, planPricing, tasks ,email,company, role} = await req.json() ;
+        // 1. Get Client IP for Rate Limiting
+        const ip = req.headers.get("x-forwarded-for") || "127.0.0.1";
+        const rateLimitKey = `rl:audit:${ip}`;
+        
+        // 2. Get the reqd response from body
+        const {tool , teamSize , plan ,billing ,actualBilling, planPricing, tasks ,email,company, role, _hp} = await req.json() ;
+
+        // 3. Honeypot check (Bots fill hidden fields)
+        if (_hp) {
+            console.warn(`Honeypot triggered by IP: ${ip}`);
+            return NextResponse.json({ message: "Request blocked" }, { status: 400 });
+        }
+
+        // 4. Rate Limiting (5 requests per hour)
+        const requestCount = await (connection as any).incr(rateLimitKey);
+        if (requestCount === 1) {
+            await (connection as any).expire(rateLimitKey, 3600); // 1 hour window
+        }
+        if (requestCount > 5) {
+            return NextResponse.json({ 
+                message: "Too many audits. Please try again in an hour.", 
+                success: false 
+            }, { status: 429 });
+        }
         console.log(tool , teamSize , plan ,billing ,actualBilling, planPricing, tasks ,email,company, role)
         
         console.log("DB upload started ...")

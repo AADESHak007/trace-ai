@@ -36,6 +36,7 @@ type ApiPayload = {
   email: string;      // input_email → String
   company: string;    // input_company → String
   role: string;       // input_role → String
+  _hp: string;        // honeypot field
 };
 
 export default function AuditPage() {
@@ -49,6 +50,7 @@ export default function AuditPage() {
   const [email, setEmail]     = useState("");                  
   const [company, setCompany] = useState("");                  
   const [role, setRole]       = useState("");                  
+  const [hp, setHp]           = useState("");                  
 
   const [step, setStep] = useState<"form" | "loading" | "results">("form");
   const [progress, setProgress] = useState(0);
@@ -89,6 +91,7 @@ export default function AuditPage() {
         email,
         company,
         role,
+        _hp: hp,
       };
 
       const res = await fetch(`${baseUrl}/api/v1/audit`, {
@@ -187,6 +190,17 @@ export default function AuditPage() {
                   </Field>
                 </div>
 
+                {/* Honeypot (Hidden) */}
+                <input 
+                  type="text" 
+                  name="_hp" 
+                  value={hp} 
+                  onChange={e => setHp(e.target.value)} 
+                  className="hidden" 
+                  tabIndex={-1} 
+                  autoComplete="off"
+                />
+
                 {/* ROW 2: tool selector */}
                 <Field label="tool" hint="input_tool · String — the AI tool being audited">
                   <div className="grid grid-cols-4 gap-3">
@@ -271,8 +285,12 @@ export default function AuditPage() {
                 <div className="w-16 h-16 bg-[#f5f3ff] rounded-2xl flex items-center justify-center text-[#6d28d9] mb-6 animate-bounce">
                   <Search size={32} />
                 </div>
-                <h2 className="text-[24px] font-extrabold mb-2">Analyzing {company}'s stack...</h2>
-                <p className="text-[#666] mb-8">Running math engine across your audit data.</p>
+                <h2 className="text-[24px] font-extrabold mb-2">
+                  {progress < 20 ? "Security verification..." : `Analyzing ${company}'s stack...`}
+                </h2>
+                <p className="text-[#666] mb-8">
+                  {progress < 20 ? "Verifying request integrity." : "Running math engine across your audit data."}
+                </p>
                 <div className="w-full max-w-md bg-gray-100 h-2 rounded-full overflow-hidden">
                   <div className="bg-[#6d28d9] h-full transition-all duration-300" style={{ width: `${progress}%` }} />
                 </div>
