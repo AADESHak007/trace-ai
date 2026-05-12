@@ -108,3 +108,35 @@ export const TOOL_PRICING: Record<string, ToolPricing> = {
     lastVerified: "2026-05-10",
   },
 };
+
+/**
+ * ANNUAL BILLING DISCOUNTS
+ * Percentage savings when switching from monthly to annual billing.
+ */
+export const TOOL_ANNUAL_DISCOUNTS: Record<string, number> = {
+  cursor: 0,           // No annual discount currently
+  claude: 0,           // No annual billing toggle currently
+  github_copilot: 0.21, // ~21% ($10/mo vs $7.92/mo)
+  chatgpt: 0.20,       // Estimated 20% for Plus/Team
+  gemini: 0.15,        // Estimated
+  windsurf: 0,
+};
+
+/**
+ * COMPETITOR ALTERNATIVES
+ * Used for Case 5 recommendations.
+ */
+export const TOOL_ALTERNATIVES: Record<string, { toolKey: string; reason: string }[]> = {
+  cursor: [
+    { toolKey: "github_copilot", reason: "Similar AI code completion, lower per-seat cost at team scale" },
+    { toolKey: "windsurf",        reason: "Comparable agentic coding features at identical price point" },
+  ],
+  chatgpt: [
+    { toolKey: "claude",  reason: "Comparable general-purpose LLM capability" },
+    { toolKey: "gemini",  reason: "Lower cost at flat-rate plans for individual users" },
+  ],
+  claude: [
+    { toolKey: "chatgpt", reason: "Market-leading multimodal capabilities" },
+    { toolKey: "gemini",  reason: "Deeper integration with Google Workspace" },
+  ],
+};

@@ -4,7 +4,7 @@ import { Navbar } from "@/components/Navbar";
 import { 
   ShieldCheck, Zap, Lock, ArrowLeft, ArrowRight,
   Bot, GitFork, FileText, Laptop, Cpu, BrainCircuit, Terminal,
-  Trash2, Plus, Search, Code
+  Trash2, Plus, Search, Code, TrendingUp
 } from "lucide-react";
 import { useState } from "react";
 import { TOOL_PRICING } from "@/lib/data/pricing";
@@ -140,258 +140,321 @@ export default function AuditPage() {
 
       {/* MAIN — 80vh */}
       <main className="h-[80vh] overflow-y-auto px-6 py-10">
-        <div className="max-w-[780px] mx-auto">
+        <div className="max-w-[1400px] mx-auto">
 
-          <button
-            onClick={() => setStep("form")}
-            className="inline-flex items-center gap-2 text-[#666] hover:text-[#6d28d9] transition-colors mb-8 text-[14px] font-semibold group"
-          >
-            <ArrowLeft size={15} className="group-hover:-translate-x-1 transition-transform" />
-            {step === "results" ? "Start over" : "Back to home"}
-          </button>
+          <div className={step === "results" ? "" : "max-w-[780px] mx-auto"}>
+            <button
+              onClick={() => setStep("form")}
+              className="inline-flex items-center gap-2 text-[#666] hover:text-[#6d28d9] transition-colors mb-8 text-[14px] font-semibold group"
+            >
+              <ArrowLeft size={15} className="group-hover:-translate-x-1 transition-transform" />
+              {step === "results" ? "Start over" : "Back to home"}
+            </button>
 
-          {/* ── FORM ──────────────────────────────────────────────────── */}
-          {step === "form" && (
-            <div className="bg-white rounded-3xl border border-gray-100 shadow-[0_8px_30px_rgba(0,0,0,0.04)] p-10 space-y-8">
-              <div>
-                <h1 className="text-[30px] font-extrabold tracking-tight mb-1">Run your AI Audit</h1>
-                <p className="text-[#666] text-[15px]">Each field maps directly to what our engine needs.</p>
-              </div>
-
-              {/* ROW 1: email + company */}
-              <div className="grid grid-cols-2 gap-5">
-                <Field label="email" hint="input_email · String">
-                  <input
-                    type="email" placeholder="alex@acme.com"
-                    value={email} onChange={e => setEmail(e.target.value)}
-                    className={inputCls}
-                  />
-                </Field>
-                <Field label="company" hint="input_company · String">
-                  <input
-                    type="text" placeholder="Acme Inc."
-                    value={company} onChange={e => setCompany(e.target.value)}
-                    className={inputCls}
-                  />
-                </Field>
-              </div>
-
-              {/* ROW 2: tool selector */}
-              <Field label="tool" hint="input_tool · String — the AI tool being audited">
-                <div className="grid grid-cols-4 gap-3">
-                  {ALL_TOOLS.map(t => {
-                    const active = tool === t.id;
-                    return (
-                      <button
-                        key={t.id}
-                        onClick={() => handleToolChange(t.id)}
-                        className={`flex flex-col items-center gap-2 p-3 rounded-2xl border-2 transition-all text-[12px] font-bold ${
-                          active
-                            ? "border-[#6d28d9] bg-[#f5f3ff] text-[#6d28d9]"
-                            : "border-gray-100 bg-[#F9FAFB] text-[#666] hover:border-[#6d28d9]/30"
-                        }`}
-                      >
-                        <t.Icon size={20} />
-                        {t.name}
-                      </button>
-                    );
-                  })}
+            {/* ── FORM ──────────────────────────────────────────────────── */}
+            {step === "form" && (
+              <div className="bg-white rounded-3xl border border-gray-100 shadow-[0_8px_30px_rgba(0,0,0,0.04)] p-10 space-y-8">
+                <div>
+                  <h1 className="text-[30px] font-extrabold tracking-tight mb-1">Run your AI Audit</h1>
+                  <p className="text-[#666] text-[15px]">Each field maps directly to what our engine needs.</p>
                 </div>
-              </Field>
 
-              {/* ROW 3: Plan, Team Size, Actual Spend (3 columns) */}
-              <div className="grid grid-cols-3 gap-5">
-                <Field label="plan" hint="input_plan">
-                  <select
-                    value={plan} onChange={e => handlePlanChange(e.target.value)}
-                    className={inputCls}
-                  >
-                    {planOptions.map(p => (
-                      <option key={p} value={p} className="capitalize">{p}</option>
-                    ))}
-                  </select>
-                  <p className="text-[10px] text-[#999] mt-1 font-medium">Official price: ${selectedToolData?.plans[plan]?.price}/{selectedToolData?.plans[plan]?.type === 'per_user' ? 'user' : 'mo'}</p>
-                </Field>
-
-                <Field label="teamSize" hint="input_team_size">
-                  <input
-                    type="number" min={1} placeholder="10"
-                    value={teamSize} onChange={e => setTeamSize(parseInt(e.target.value) || 1)}
-                    className={inputCls}
-                  />
-                </Field>
-
-                <Field label="actual billing" hint="input_billing">
-                  <div className="relative">
-                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-[#999] font-bold text-[15px]">$</span>
+                {/* ROW 1: email + company */}
+                <div className="grid grid-cols-2 gap-5">
+                  <Field label="email" hint="input_email · String">
                     <input
-                      type="number" min={0}
-                      value={billing} onChange={e => setBilling(parseFloat(e.target.value) || 0)}
-                      className={inputCls + " pl-8"}
+                      type="email" placeholder="alex@acme.com"
+                      value={email} onChange={e => setEmail(e.target.value)}
+                      className={inputCls}
                     />
-                  </div>
-                  <p className="text-[10px] text-[#999] mt-1 font-medium italic">What you actually pay monthly</p>
-                </Field>
-              </div>
-
-              {/* ROW 5: tasks */}
-              <Field label="tasks" hint="input_tasks · String (Text) — how the team uses this tool">
-                <textarea
-                  rows={3} placeholder="E.g. Engineers use it for code completion, 8h/day..."
-                  value={tasks} onChange={e => setTasks(e.target.value)}
-                  className={inputCls + " resize-none"}
-                />
-              </Field>
-
-              {/* SUBMIT */}
-              <button
-                onClick={handleAnalyze}
-                disabled={!email || !company || !tool || !plan || !teamSize}
-                className="w-full bg-[#6d28d9] hover:bg-[#5b21b6] disabled:bg-gray-300 text-white font-bold py-4 rounded-2xl flex items-center justify-center gap-2 transition-all shadow-lg shadow-[#6d28d9]/20 text-[16px]"
-              >
-                Analyze Overpayments <ArrowRight size={20} />
-              </button>
-            </div>
-          )}
-
-          {/* ── LOADING ──────────────────────────────────────────────── */}
-          {step === "loading" && (
-            <div className="bg-white rounded-3xl border border-gray-100 shadow-[0_8px_30px_rgba(0,0,0,0.04)] p-20 flex flex-col items-center text-center">
-              <div className="w-16 h-16 bg-[#f5f3ff] rounded-2xl flex items-center justify-center text-[#6d28d9] mb-6 animate-bounce">
-                <Search size={32} />
-              </div>
-              <h2 className="text-[24px] font-extrabold mb-2">Analyzing {company}'s stack...</h2>
-              <p className="text-[#666] mb-8">Running math engine across your audit data.</p>
-              <div className="w-full max-w-md bg-gray-100 h-2 rounded-full overflow-hidden">
-                <div className="bg-[#6d28d9] h-full transition-all duration-300" style={{ width: `${progress}%` }} />
-              </div>
-              <p className="text-[12px] font-bold text-[#6d28d9] mt-3 uppercase tracking-widest">{progress}% complete</p>
-            </div>
-          )}
-
-          {/* ── RESULTS ──────────────────────────────────────────────── */}
-          {step === "results" && apiData && (
-            <div className="space-y-8 pb-20">
-              <div className="bg-white rounded-[32px] border border-gray-100 shadow-[0_20px_50px_rgba(0,0,0,0.03)] overflow-hidden">
-                {/* Header Section */}
-                <div className="bg-[#111] p-10 text-white relative overflow-hidden">
-                  <div className="absolute top-0 right-0 w-64 h-64 bg-[#6d28d9] blur-[100px] opacity-20 -mr-20 -mt-20" />
-                  <div className="relative z-10">
-                    <div className="flex items-center justify-between mb-8">
-                      <div>
-                        <h1 className="text-[32px] font-extrabold tracking-tight mb-2">Audit Report: {company}</h1>
-                        <p className="text-gray-400 text-[15px] font-medium flex items-center gap-2">
-                          <ShieldCheck size={16} className="text-[#10b981]" /> Verified by Trace AI Engine
-                        </p>
-                      </div>
-                      <div className="bg-white/10 backdrop-blur-md px-5 py-3 rounded-2xl border border-white/10">
-                        <p className="text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-1">Status</p>
-                        <p className="text-[14px] font-extrabold text-[#10b981]">Optimization Ready</p>
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-6">
-                      <div className="bg-white/5 rounded-2xl p-6 border border-white/10 backdrop-blur-sm">
-                        <p className="text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-1">Monthly Recovery</p>
-                        <p className="text-[44px] font-extrabold text-[#fff] tracking-tight">
-                          ${Number(apiData.output_monthly_saving ?? 0).toLocaleString()}
-                        </p>
-                      </div>
-                      <div className="bg-[#6d28d9] rounded-2xl p-6 border border-white/10 shadow-lg shadow-[#6d28d9]/20">
-                        <p className="text-[11px] font-bold text-white/60 uppercase tracking-widest mb-1">Annual Recovery</p>
-                        <p className="text-[44px] font-extrabold text-white tracking-tight">
-                          ${Number(apiData.output_annual_saving ?? 0).toLocaleString()}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
+                  </Field>
+                  <Field label="company" hint="input_company · String">
+                    <input
+                      type="text" placeholder="Acme Inc."
+                      value={company} onChange={e => setCompany(e.target.value)}
+                      className={inputCls}
+                    />
+                  </Field>
                 </div>
 
-                {/* Findings Section */}
-                <div className="p-10 space-y-10">
-                  {/* Verdict Banner */}
-                  <div className="flex items-start gap-5 p-6 bg-gray-50 rounded-2xl border border-gray-100">
-                    <div className="w-12 h-12 bg-white rounded-xl flex items-center justify-center shadow-sm border border-gray-100 shrink-0">
-                      <Zap size={24} className="text-[#6d28d9]" />
-                    </div>
-                    <div>
-                      <p className="text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-1">Executive Verdict</p>
-                      <p className="text-[18px] font-bold text-[#111] leading-snug">{apiData.output_recommendation}</p>
-                    </div>
-                  </div>
-
-                  {/* Split findings */}
-                  <div className="grid grid-cols-1 gap-4">
-                    <h3 className="text-[14px] font-extrabold text-[#111] uppercase tracking-[0.2em] mb-2 flex items-center gap-3">
-                      <span className="w-8 h-[2px] bg-[#6d28d9]" /> Detailed Findings
-                    </h3>
-                    
-                    {apiData.output_savings_reason?.split(" | ").map((reason: string, idx: number) => {
-                      const isStrategic = reason.toLowerCase().includes("redundancy") || 
-                                          reason.toLowerCase().includes("overlap") || 
-                                          reason.toLowerCase().includes("efficiency") || 
-                                          reason.toLowerCase().includes("opportunity") || 
-                                          reason.toLowerCase().includes("compliance") || 
-                                          reason.toLowerCase().includes("potential");
-                      
+                {/* ROW 2: tool selector */}
+                <Field label="tool" hint="input_tool · String — the AI tool being audited">
+                  <div className="grid grid-cols-4 gap-3">
+                    {ALL_TOOLS.map(t => {
+                      const active = tool === t.id;
                       return (
-                        <div key={idx} className={`p-6 rounded-2xl border transition-all hover:shadow-md flex items-start gap-4 ${
-                          isStrategic 
-                            ? "bg-[#f5f3ff]/50 border-[#ddd6fe] hover:border-[#6d28d9]" 
-                            : "bg-white border-gray-100 hover:border-gray-300"
-                        }`}>
-                          <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${
-                            isStrategic ? "bg-[#6d28d9] text-white" : "bg-[#10b981] text-white"
-                          }`}>
-                            {isStrategic ? <BrainCircuit size={16} /> : <ShieldCheck size={16} />}
-                          </div>
-                          <div>
-                            <p className={`text-[10px] font-bold uppercase tracking-widest mb-1 ${
-                              isStrategic ? "text-[#6d28d9]" : "text-[#10b981]"
-                            }`}>
-                              {isStrategic ? "Strategic Insight" : "Financial Optimization"}
-                            </p>
-                            <p className="text-[15px] text-[#444] leading-relaxed font-medium">{reason}</p>
-                          </div>
-                        </div>
+                        <button
+                          key={t.id}
+                          onClick={() => handleToolChange(t.id)}
+                          className={`flex flex-col items-center gap-2 p-3 rounded-2xl border-2 transition-all text-[12px] font-bold ${
+                            active
+                              ? "border-[#6d28d9] bg-[#f5f3ff] text-[#6d28d9]"
+                              : "border-gray-100 bg-[#F9FAFB] text-[#666] hover:border-[#6d28d9]/30"
+                          }`}
+                        >
+                          <t.Icon size={20} />
+                          {t.name}
+                        </button>
                       );
                     })}
                   </div>
+                </Field>
 
-                  {/* CTA Footer */}
-                  <div className="pt-10 border-t border-gray-100 flex items-center justify-between">
-                    <div className="max-w-[300px]">
-                      <p className="font-bold text-[18px] mb-1">Claim your $${Number(apiData.output_annual_saving ?? 0).toLocaleString()} savings?</p>
-                      <p className="text-[14px] text-[#666]">Our auditors handle the cancellation and negotiation for you.</p>
+                {/* ROW 3: Plan, Team Size, Actual Spend (3 columns) */}
+                <div className="grid grid-cols-3 gap-5">
+                  <Field label="plan" hint="input_plan">
+                    <select
+                      value={plan} onChange={e => handlePlanChange(e.target.value)}
+                      className={inputCls}
+                    >
+                      {planOptions.map(p => (
+                        <option key={p} value={p} className="capitalize">{p}</option>
+                      ))}
+                    </select>
+                    <p className="text-[10px] text-[#999] mt-1 font-medium">Official price: ${selectedToolData?.plans[plan]?.price}/{selectedToolData?.plans[plan]?.type === 'per_user' ? 'user' : 'mo'}</p>
+                  </Field>
+
+                  <Field label="teamSize" hint="input_team_size">
+                    <input
+                      type="number" min={1} placeholder="10"
+                      value={teamSize} onChange={e => setTeamSize(parseInt(e.target.value) || 1)}
+                      className={inputCls}
+                    />
+                  </Field>
+
+                  <Field label="actual billing" hint="input_billing">
+                    <div className="relative">
+                      <span className="absolute left-4 top-1/2 -translate-y-1/2 text-[#999] font-bold text-[15px]">$</span>
+                      <input
+                        type="number" min={0}
+                        value={billing} onChange={e => setBilling(parseFloat(e.target.value) || 0)}
+                        className={inputCls + " pl-8"}
+                      />
                     </div>
-                    <button className="bg-[#6d28d9] hover:bg-[#5b21b6] text-white font-bold px-10 py-4 rounded-2xl transition-all shadow-xl shadow-[#6d28d9]/20 flex items-center gap-3">
-                      Talk to an expert <ArrowRight size={20} />
-                    </button>
+                    <p className="text-[10px] text-[#999] mt-1 font-medium italic">What you actually pay monthly</p>
+                  </Field>
+                </div>
+
+                {/* ROW 5: tasks */}
+                <Field label="tasks" hint="input_tasks · String (Text) — how the team uses this tool">
+                  <textarea
+                    rows={3} placeholder="E.g. Engineers use it for code completion, 8h/day..."
+                    value={tasks} onChange={e => setTasks(e.target.value)}
+                    className={inputCls + " resize-none"}
+                  />
+                </Field>
+
+                {/* SUBMIT */}
+                <button
+                  onClick={handleAnalyze}
+                  disabled={!email || !company || !tool || !plan || !teamSize}
+                  className="w-full bg-[#6d28d9] hover:bg-[#5b21b6] disabled:bg-gray-300 text-white font-bold py-4 rounded-2xl flex items-center justify-center gap-2 transition-all shadow-lg shadow-[#6d28d9]/20 text-[16px]"
+                >
+                  Analyze Overpayments <ArrowRight size={20} />
+                </button>
+              </div>
+            )}
+
+            {/* ── LOADING ──────────────────────────────────────────────── */}
+            {step === "loading" && (
+              <div className="bg-white rounded-3xl border border-gray-100 shadow-[0_8px_30px_rgba(0,0,0,0.04)] p-20 flex flex-col items-center text-center">
+                <div className="w-16 h-16 bg-[#f5f3ff] rounded-2xl flex items-center justify-center text-[#6d28d9] mb-6 animate-bounce">
+                  <Search size={32} />
+                </div>
+                <h2 className="text-[24px] font-extrabold mb-2">Analyzing {company}'s stack...</h2>
+                <p className="text-[#666] mb-8">Running math engine across your audit data.</p>
+                <div className="w-full max-w-md bg-gray-100 h-2 rounded-full overflow-hidden">
+                  <div className="bg-[#6d28d9] h-full transition-all duration-300" style={{ width: `${progress}%` }} />
+                </div>
+                <p className="text-[12px] font-bold text-[#6d28d9] mt-3 uppercase tracking-widest">{progress}% complete</p>
+              </div>
+            )}
+          </div>
+
+          {/* ── RESULTS ──────────────────────────────────────────────── */}
+          {step === "results" && apiData && (
+            <div className="space-y-8 pb-20 animate-in fade-in slide-in-from-bottom-10 duration-700">
+              {/* 1. HERO VERDICT BAR */}
+              <div className="bg-[#111] rounded-[32px] p-10 text-white flex flex-col md:flex-row items-center justify-between gap-8 shadow-2xl relative overflow-hidden border border-white/10">
+                <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-r from-[#6d28d9]/20 to-transparent pointer-events-none" />
+                <div className="relative z-10">
+                  <p className="text-[14px] font-bold uppercase tracking-[0.3em] text-gray-400 mb-2">Audit Verdict</p>
+                  <h2 className="text-[28px] md:text-[36px] font-extrabold leading-tight max-w-[700px]">
+                    {apiData.output_recommendation}
+                  </h2>
+                </div>
+                <div className="flex gap-12 relative z-10 shrink-0">
+                  <div className="text-center md:text-right">
+                    <p className="text-[12px] font-bold uppercase tracking-widest text-[#10b981] mb-1">Annual Recovery</p>
+                    <p className="text-[48px] font-black tracking-tighter text-white">
+                      ${Number(apiData.output_annual_saving ?? 0).toLocaleString()}
+                    </p>
                   </div>
                 </div>
               </div>
 
-              {/* RAW OUTPUT (Collapsed by default) */}
-              <div className="bg-white rounded-3xl border border-gray-100 overflow-hidden shadow-sm">
-                <button
-                  onClick={() => setShowRaw(!showRaw)}
-                  className="w-full flex items-center justify-between px-8 py-5 hover:bg-gray-50 transition-colors"
-                >
-                  <div className="flex items-center gap-3 text-[14px] font-bold text-[#666]">
-                    <Code size={18} />
-                    Technical Raw Response
-                  </div>
-                  <span className={`text-[#999] text-[12px] transition-transform ${showRaw ? "rotate-180" : ""}`}>▼</span>
-                </button>
-                {showRaw && (
-                  <div className="px-8 pb-8">
-                    <div className="bg-[#1e1e1e] rounded-2xl p-6 overflow-x-auto border border-[#333]">
-                      <pre className="text-[13px] text-[#d4d4d4] font-mono leading-relaxed">
-                        {JSON.stringify(apiData, null, 2)}
-                      </pre>
+              {/* 2. MAIN INTELLIGENCE GRID */}
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+                {/* LEFT: AI SUMMARY (60%) */}
+                <div className="lg:col-span-7 space-y-8">
+                  <div className="bg-white rounded-[40px] p-10 border border-gray-100 shadow-xl shadow-gray-200/40 relative">
+                    <div className="flex items-center gap-3 mb-6">
+                      <div className="w-10 h-10 rounded-xl bg-[#6d28d9]/10 text-[#6d28d9] flex items-center justify-center">
+                        <BrainCircuit size={22} />
+                      </div>
+                      <h3 className="text-[16px] font-extrabold text-[#111] uppercase tracking-widest">Executive Strategy</h3>
+                    </div>
+                    <div className="text-[18px] text-[#444] leading-[1.8] font-medium italic">
+                      {apiData.llm_raw_response?.summary || apiData.output_recommendation || "Our analysis indicates significant opportunities for stack optimization and billing recovery across your current toolset."}
                     </div>
                   </div>
-                )}
+
+                  {/* FINANCIAL RECOVERY GRID */}
+                  {(() => {
+                    const reasons = apiData.output_savings_reason?.split(" | ") || [];
+                    const strategicKeys = ["redundancy", "overlap", "efficiency", "opportunity", "compliance", "potential", "growth", "security"];
+                    const financial = reasons.filter((r: string) => !strategicKeys.some(k => r.toLowerCase().includes(k)));
+
+                    return financial.length > 0 ? (
+                      <div className="space-y-6">
+                        <div className="flex items-center justify-between px-2">
+                          <h3 className="text-[14px] font-extrabold text-[#111] uppercase tracking-[0.2em] flex items-center gap-3">
+                            <span className="w-8 h-[2px] bg-[#10b981]" /> Financial Optimizations
+                          </h3>
+                        </div>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                          {financial.map((reasonRaw: string, idx: number) => {
+                            const reason = reasonRaw.replace(/\[CASE\d+\]/gi, "").trim();
+                            const hasArrow = reason.includes(" \u2192 ");
+                            
+                            const [spend, action, impactWithReason] = hasArrow 
+                              ? reason.split(" \u2192 ") 
+                              : ["Current Setup", reason, ""];
+                              
+                            const [impact, detailReason] = impactWithReason ? impactWithReason.split(". Reason: ") : [impactWithReason || "", ""];
+                            
+                            return (
+                              <div key={idx} className="p-8 rounded-[32px] border border-gray-100 bg-white hover:shadow-2xl hover:border-[#10b981]/20 transition-all flex flex-col gap-6">
+                                <div className="flex items-center justify-between">
+                                  <div className="w-10 h-10 rounded-xl bg-[#10b981]/10 text-[#10b981] flex items-center justify-center">
+                                    <ShieldCheck size={22} />
+                                  </div>
+                                  {impact && <div className="bg-[#111] text-white text-[11px] font-bold px-3 py-1 rounded-full max-w-[150px] truncate">{impact}</div>}
+                                </div>
+                                <div className="space-y-3">
+                                  {spend && <p className="text-[13px] font-bold text-gray-400 uppercase tracking-tight">{spend}</p>}
+                                  {spend && <div className="w-6 h-[2px] bg-gray-200" />}
+                                  <p className="text-[17px] font-extrabold text-[#111] leading-snug">{action}</p>
+                                </div>
+                                {detailReason && <p className="text-[13px] text-gray-500 leading-relaxed italic border-l-2 border-gray-100 pl-4">"{detailReason}"</p>}
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    ) : null;
+                  })()}
+                </div>
+
+                {/* RIGHT: METRICS & STRATEGIC (40%) */}
+                <div className="lg:col-span-5 space-y-8">
+                  {/* AUDIT CONTEXT BOX */}
+                  <div className="bg-[#f8fafc] rounded-[40px] p-10 border border-[#e2e8f0] grid grid-cols-2 gap-8">
+                    <div>
+                      <p className="text-[10px] font-extrabold text-gray-400 uppercase tracking-widest mb-2">Company</p>
+                      <p className="text-[16px] font-bold text-[#111]">{apiData.input_company || "Audit Entity"}</p>
+                    </div>
+                    <div>
+                      <p className="text-[10px] font-extrabold text-gray-400 uppercase tracking-widest mb-2">Team Size</p>
+                      <p className="text-[16px] font-bold text-[#111]">{apiData.input_team_size} Seats</p>
+                    </div>
+                    <div>
+                      <p className="text-[10px] font-extrabold text-gray-400 uppercase tracking-widest mb-2">Current Tool</p>
+                      <div className="flex items-center gap-2">
+                        {(() => {
+                          const Icon = getIcon(apiData.input_tool_key);
+                          return <Icon size={16} className="text-[#6d28d9]" />;
+                        })()}
+                        <p className="text-[16px] font-bold text-[#111] capitalize">{apiData.input_tool_key?.replace("_", " ")}</p>
+                      </div>
+                    </div>
+                    <div>
+                      <p className="text-[10px] font-extrabold text-gray-400 uppercase tracking-widest mb-2">Monthly Burn</p>
+                      <p className="text-[16px] font-bold text-red-500">${Number(apiData.input_actual_billing).toLocaleString()}</p>
+                    </div>
+                  </div>
+
+                  {/* STRATEGIC INSIGHTS LIST */}
+                  {(() => {
+                    const reasons = apiData.output_savings_reason?.split(" | ") || [];
+                    const strategicKeys = ["redundancy", "overlap", "efficiency", "opportunity", "compliance", "potential", "growth", "security"];
+                    const strategic = reasons.filter((r: string) => strategicKeys.some(k => r.toLowerCase().includes(k)));
+
+                    return strategic.length > 0 ? (
+                      <div className="space-y-6">
+                        <div className="flex items-center gap-3 px-2">
+                          <h3 className="text-[14px] font-extrabold text-[#111] uppercase tracking-[0.2em]">Strategic Insights</h3>
+                        </div>
+                        <div className="space-y-4">
+                          {strategic.map((reasonRaw: string, idx: number) => {
+                            const reason = reasonRaw.replace(/\[CASE\d+\]/gi, "").trim();
+                            const isRedundant = reason.toLowerCase().includes("redundancy");
+                            const isGrowth = reason.toLowerCase().includes("growth");
+                            return (
+                              <div key={idx} className="p-6 rounded-3xl border border-[#ede9fe] bg-white flex items-start gap-4 hover:border-[#6d28d9]/30 transition-all">
+                                <div className="w-10 h-10 rounded-xl bg-[#f5f3ff] text-[#6d28d9] flex items-center justify-center shrink-0">
+                                  {isRedundant ? <Zap size={18} /> : isGrowth ? <TrendingUp size={18} /> : <Lock size={18} />}
+                                </div>
+                                <p className="text-[14px] text-[#4c1d95] font-medium leading-relaxed">{reason}</p>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    ) : null;
+                  })()}
+                </div>
+              </div>
+
+              {/* 3. CASE 5 BONUS FOOTER */}
+              {apiData.llm_raw_response?.additionalMonthlySavings > 0 && (
+                <div className="bg-gradient-to-br from-[#6d28d9] to-[#4c1d95] p-12 rounded-[40px] text-white relative overflow-hidden shadow-2xl group">
+                  <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-white opacity-5 blur-[100px] -mr-40 -mt-40 group-hover:opacity-10 transition-opacity" />
+                  <div className="flex flex-col md:flex-row items-center gap-12 relative z-10">
+                    <div className="flex-1 space-y-4">
+                      <div className="flex items-center gap-3">
+                        <div className="bg-white/20 p-3 rounded-2xl backdrop-blur-md">
+                          <GitFork size={32} />
+                        </div>
+                        <h4 className="text-[16px] font-extrabold uppercase tracking-[0.3em]">Bonus Recovery</h4>
+                      </div>
+                      <h3 className="text-[32px] md:text-[40px] font-black leading-tight">Switch tools and save an extra ${Number(apiData.llm_raw_response.additionalMonthlySavings * 12).toLocaleString()}/year.</h3>
+                      <p className="text-[18px] text-white/70 max-w-[600px] leading-relaxed">
+                        We found a competitor with matching capabilities at a fraction of the cost.
+                        We handle the migration for you.
+                      </p>
+                    </div>
+                    <button className="bg-white text-[#111] text-[18px] font-black px-10 py-6 rounded-[24px] hover:scale-105 transition-all shadow-2xl flex items-center gap-3 shrink-0">
+                      Explore Tool <ArrowRight size={24} />
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* 4. STICKY CTA FOOTER */}
+              <div className="bg-white border border-gray-100 rounded-[32px] p-8 shadow-xl flex flex-col md:flex-row items-center justify-between gap-8">
+                <div>
+                  <h4 className="text-[20px] font-bold mb-1">Ready to capture these savings?</h4>
+                  <p className="text-gray-400">Our expert auditors handle the full implementation & negotiation.</p>
+                </div>
+                <div className="flex items-center gap-4">
+                  <button className="bg-[#6d28d9] text-white font-black px-8 py-4 rounded-2xl hover:bg-[#5b21b6] transition-all shadow-lg shadow-[#6d28d9]/20">
+                    Start Recovery Process
+                  </button>
+                  <button className="text-gray-400 font-bold px-6 py-4 hover:text-black transition-all">
+                    Download PDF Report
+                  </button>
+                </div>
               </div>
             </div>
           )}
