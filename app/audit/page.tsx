@@ -29,7 +29,9 @@ type ApiPayload = {
   tool: string;       // input_tool  → String
   teamSize: number;   // input_team_size → Int
   plan: string;       // input_plan  → String
-  billing: number;    // input_billing → Decimal (numeric monthly spend)
+  billing: number;    // input_billing → Decimal (fallback)
+  actualBilling: number; // what they pay
+  planPricing: number;   // ground-truth plan price
   tasks: string;      // input_tasks → String (Text)
   email: string;      // input_email → String
   company: string;    // input_company → String
@@ -79,6 +81,8 @@ export default function AuditPage() {
         teamSize: Number(teamSize),
         plan,
         billing: Number(billing),
+        actualBilling: Number(billing),
+        planPricing: TOOL_PRICING[tool].plans[plan].price,
         tasks,
         email,
         company,
@@ -195,9 +199,9 @@ export default function AuditPage() {
                 </div>
               </Field>
 
-              {/* ROW 3: plan + billing side-by-side */}
-              <div className="grid grid-cols-2 gap-5">
-                <Field label="plan" hint="input_plan · String — plan tier for the selected tool">
+              {/* ROW 3: Plan, Team Size, Actual Spend (3 columns) */}
+              <div className="grid grid-cols-3 gap-5">
+                <Field label="plan" hint="input_plan">
                   <select
                     value={plan} onChange={e => handlePlanChange(e.target.value)}
                     className={inputCls}
@@ -206,9 +210,18 @@ export default function AuditPage() {
                       <option key={p} value={p} className="capitalize">{p}</option>
                     ))}
                   </select>
+                  <p className="text-[10px] text-[#999] mt-1 font-medium">Official price: ${selectedToolData?.plans[plan]?.price}/{selectedToolData?.plans[plan]?.type === 'per_user' ? 'user' : 'mo'}</p>
                 </Field>
 
-                <Field label="billing" hint="input_billing · Decimal — monthly cost in USD">
+                <Field label="teamSize" hint="input_team_size">
+                  <input
+                    type="number" min={1} placeholder="10"
+                    value={teamSize} onChange={e => setTeamSize(parseInt(e.target.value) || 1)}
+                    className={inputCls}
+                  />
+                </Field>
+
+                <Field label="actual billing" hint="input_billing">
                   <div className="relative">
                     <span className="absolute left-4 top-1/2 -translate-y-1/2 text-[#999] font-bold text-[15px]">$</span>
                     <input
@@ -217,17 +230,9 @@ export default function AuditPage() {
                       className={inputCls + " pl-8"}
                     />
                   </div>
+                  <p className="text-[10px] text-[#999] mt-1 font-medium italic">What you actually pay monthly</p>
                 </Field>
               </div>
-
-              {/* ROW 4: teamSize */}
-              <Field label="teamSize" hint="input_team_size · Int — number of active users on the plan">
-                <input
-                  type="number" min={1} placeholder="10"
-                  value={teamSize} onChange={e => setTeamSize(parseInt(e.target.value) || 1)}
-                  className={inputCls}
-                />
-              </Field>
 
               {/* ROW 5: tasks */}
               <Field label="tasks" hint="input_tasks · String (Text) — how the team uses this tool">
@@ -266,61 +271,122 @@ export default function AuditPage() {
 
           {/* ── RESULTS ──────────────────────────────────────────────── */}
           {step === "results" && apiData && (
-            <div className="space-y-6">
-              <div className="bg-white rounded-3xl border border-gray-100 shadow-[0_8px_30px_rgba(0,0,0,0.04)] p-10">
-                <div className="flex items-center justify-between mb-10">
-                  <div>
-                    <h1 className="text-[30px] font-extrabold mb-1">Audit Complete ✓</h1>
-                    <p className="text-[#666]">Results for {company}.</p>
+            <div className="space-y-8 pb-20">
+              <div className="bg-white rounded-[32px] border border-gray-100 shadow-[0_20px_50px_rgba(0,0,0,0.03)] overflow-hidden">
+                {/* Header Section */}
+                <div className="bg-[#111] p-10 text-white relative overflow-hidden">
+                  <div className="absolute top-0 right-0 w-64 h-64 bg-[#6d28d9] blur-[100px] opacity-20 -mr-20 -mt-20" />
+                  <div className="relative z-10">
+                    <div className="flex items-center justify-between mb-8">
+                      <div>
+                        <h1 className="text-[32px] font-extrabold tracking-tight mb-2">Audit Report: {company}</h1>
+                        <p className="text-gray-400 text-[15px] font-medium flex items-center gap-2">
+                          <ShieldCheck size={16} className="text-[#10b981]" /> Verified by Trace AI Engine
+                        </p>
+                      </div>
+                      <div className="bg-white/10 backdrop-blur-md px-5 py-3 rounded-2xl border border-white/10">
+                        <p className="text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-1">Status</p>
+                        <p className="text-[14px] font-extrabold text-[#10b981]">Optimization Ready</p>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-6">
+                      <div className="bg-white/5 rounded-2xl p-6 border border-white/10 backdrop-blur-sm">
+                        <p className="text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-1">Monthly Recovery</p>
+                        <p className="text-[44px] font-extrabold text-[#fff] tracking-tight">
+                          ${Number(apiData.output_monthly_saving ?? 0).toLocaleString()}
+                        </p>
+                      </div>
+                      <div className="bg-[#6d28d9] rounded-2xl p-6 border border-white/10 shadow-lg shadow-[#6d28d9]/20">
+                        <p className="text-[11px] font-bold text-white/60 uppercase tracking-widest mb-1">Annual Recovery</p>
+                        <p className="text-[44px] font-extrabold text-white tracking-tight">
+                          ${Number(apiData.output_annual_saving ?? 0).toLocaleString()}
+                        </p>
+                      </div>
+                    </div>
                   </div>
-                  <span className="bg-[#dcfce7] text-[#15803d] px-4 py-2 rounded-full font-bold text-[13px]">Verified</span>
                 </div>
 
-                <div className="grid grid-cols-2 gap-6 mb-10">
-                  <div className="bg-[#f5f3ff] rounded-2xl p-6 border border-[#ddd6fe]">
-                    <p className="text-[11px] font-bold text-[#6d28d9] uppercase tracking-widest mb-1">Monthly Savings</p>
-                    <p className="text-[40px] font-extrabold">${Number(apiData.output_monthly_saving ?? 0).toLocaleString()}</p>
+                {/* Findings Section */}
+                <div className="p-10 space-y-10">
+                  {/* Verdict Banner */}
+                  <div className="flex items-start gap-5 p-6 bg-gray-50 rounded-2xl border border-gray-100">
+                    <div className="w-12 h-12 bg-white rounded-xl flex items-center justify-center shadow-sm border border-gray-100 shrink-0">
+                      <Zap size={24} className="text-[#6d28d9]" />
+                    </div>
+                    <div>
+                      <p className="text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-1">Executive Verdict</p>
+                      <p className="text-[18px] font-bold text-[#111] leading-snug">{apiData.output_recommendation}</p>
+                    </div>
                   </div>
-                  <div className="bg-[#111] rounded-2xl p-6 text-white">
-                    <p className="text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-1">Annual Savings</p>
-                    <p className="text-[40px] font-extrabold">${Number(apiData.output_annual_saving ?? 0).toLocaleString()}</p>
-                  </div>
-                </div>
 
-                {apiData.output_recommendation && (
-                  <div className="bg-gray-50 rounded-2xl p-6 mb-8">
-                    <p className="text-[13px] font-bold uppercase tracking-wider mb-2">Recommendation</p>
-                    <p className="text-[15px] text-[#444] leading-relaxed italic">"{apiData.output_recommendation}"</p>
+                  {/* Split findings */}
+                  <div className="grid grid-cols-1 gap-4">
+                    <h3 className="text-[14px] font-extrabold text-[#111] uppercase tracking-[0.2em] mb-2 flex items-center gap-3">
+                      <span className="w-8 h-[2px] bg-[#6d28d9]" /> Detailed Findings
+                    </h3>
+                    
+                    {apiData.output_savings_reason?.split(" | ").map((reason: string, idx: number) => {
+                      const isStrategic = reason.toLowerCase().includes("redundancy") || 
+                                          reason.toLowerCase().includes("overlap") || 
+                                          reason.toLowerCase().includes("efficiency") || 
+                                          reason.toLowerCase().includes("opportunity") || 
+                                          reason.toLowerCase().includes("compliance") || 
+                                          reason.toLowerCase().includes("potential");
+                      
+                      return (
+                        <div key={idx} className={`p-6 rounded-2xl border transition-all hover:shadow-md flex items-start gap-4 ${
+                          isStrategic 
+                            ? "bg-[#f5f3ff]/50 border-[#ddd6fe] hover:border-[#6d28d9]" 
+                            : "bg-white border-gray-100 hover:border-gray-300"
+                        }`}>
+                          <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${
+                            isStrategic ? "bg-[#6d28d9] text-white" : "bg-[#10b981] text-white"
+                          }`}>
+                            {isStrategic ? <BrainCircuit size={16} /> : <ShieldCheck size={16} />}
+                          </div>
+                          <div>
+                            <p className={`text-[10px] font-bold uppercase tracking-widest mb-1 ${
+                              isStrategic ? "text-[#6d28d9]" : "text-[#10b981]"
+                            }`}>
+                              {isStrategic ? "Strategic Insight" : "Financial Optimization"}
+                            </p>
+                            <p className="text-[15px] text-[#444] leading-relaxed font-medium">{reason}</p>
+                          </div>
+                        </div>
+                      );
+                    })}
                   </div>
-                )}
 
-                <div className="pt-8 border-t border-gray-100 flex items-center justify-between">
-                  <div>
-                    <p className="font-bold text-[16px]">Ready to claim these savings?</p>
-                    <p className="text-[14px] text-[#666]">Connect with an auditor to fix your billing instantly.</p>
+                  {/* CTA Footer */}
+                  <div className="pt-10 border-t border-gray-100 flex items-center justify-between">
+                    <div className="max-w-[300px]">
+                      <p className="font-bold text-[18px] mb-1">Claim your $${Number(apiData.output_annual_saving ?? 0).toLocaleString()} savings?</p>
+                      <p className="text-[14px] text-[#666]">Our auditors handle the cancellation and negotiation for you.</p>
+                    </div>
+                    <button className="bg-[#6d28d9] hover:bg-[#5b21b6] text-white font-bold px-10 py-4 rounded-2xl transition-all shadow-xl shadow-[#6d28d9]/20 flex items-center gap-3">
+                      Talk to an expert <ArrowRight size={20} />
+                    </button>
                   </div>
-                  <button className="bg-[#6d28d9] hover:bg-[#5b21b6] text-white font-bold px-8 py-3 rounded-xl transition-all">
-                    Talk to an expert
-                  </button>
                 </div>
               </div>
 
-              {/* RAW OUTPUT */}
-              <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
+              {/* RAW OUTPUT (Collapsed by default) */}
+              <div className="bg-white rounded-3xl border border-gray-100 overflow-hidden shadow-sm">
                 <button
                   onClick={() => setShowRaw(!showRaw)}
-                  className="w-full flex items-center justify-between px-6 py-4 hover:bg-gray-50 transition-colors"
+                  className="w-full flex items-center justify-between px-8 py-5 hover:bg-gray-50 transition-colors"
                 >
-                  <div className="flex items-center gap-2 text-[14px] font-bold">
-                    <Code size={16} className="text-[#6d28d9]" />
-                    Raw API Response
+                  <div className="flex items-center gap-3 text-[14px] font-bold text-[#666]">
+                    <Code size={18} />
+                    Technical Raw Response
                   </div>
                   <span className={`text-[#999] text-[12px] transition-transform ${showRaw ? "rotate-180" : ""}`}>▼</span>
                 </button>
                 {showRaw && (
-                  <div className="px-6 pb-6">
-                    <div className="bg-[#1e1e1e] rounded-xl p-4 overflow-x-auto">
-                      <pre className="text-[12px] text-[#d4d4d4] font-mono leading-relaxed">
+                  <div className="px-8 pb-8">
+                    <div className="bg-[#1e1e1e] rounded-2xl p-6 overflow-x-auto border border-[#333]">
+                      <pre className="text-[13px] text-[#d4d4d4] font-mono leading-relaxed">
                         {JSON.stringify(apiData, null, 2)}
                       </pre>
                     </div>

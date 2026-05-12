@@ -3,6 +3,7 @@ import { Worker, Job } from "bullmq";
 import { prisma } from "../lib/prisma";
 import { connection } from "../lib/queue";
 import { runMathEngine } from "../lib/engine/math-engine";
+import { runLLMEngine } from "../lib/engine/llm-engine";
 
 console.log("Audit Worker started and waiting for jobs...");
 
@@ -33,7 +34,18 @@ const worker = new Worker(
         planKey: audit.input_plan,
         teamSize: audit.input_team_size,
         declaredBilling: Number(audit.input_billing),
+        actualBilling: audit.input_actual_billing ? Number(audit.input_actual_billing) : undefined,
+        planPricing: audit.input_plan_pricing ? Number(audit.input_plan_pricing) : undefined,
         usagePattern: "medium", // We can refine this later
+      });
+
+      // 3.1 Run the LLM Strategy Engine
+      const llmResult = await runLLMEngine({
+        tool: audit.input_tool,
+        plan: audit.input_plan,
+        teamSize: audit.input_team_size,
+        tasks: audit.input_tasks,
+        mathResults: mathResult
       });
 
       // 4. Update the DB with the results
@@ -43,14 +55,11 @@ const worker = new Worker(
         data: {
           status: "completed",
           output_spend: audit.input_billing,
-          output_monthly_saving: mathResult.totalSavingsMonthly,
-          output_annual_saving: mathResult.totalSavingsMonthly * 12,
-          output_recommendation: mathResult.heroVerdict,
-          // We can join all case messages for the reason
-          output_savings_reason: Object.values(mathResult.cases)
-            .filter(c => c.active)
-            .map(c => c.message)
-            .join(" | "),
+          output_monthly_saving: mathResult.totalSavingsMonthly + llmResult.additionalMonthlySavings,
+          output_annual_saving: (mathResult.totalSavingsMonthly + llmResult.additionalMonthlySavings) * 12,
+          output_recommendation: llmResult.recommendation,
+          output_savings_reason: llmResult.savingsReason,
+          llm_raw_response: llmResult as any,
           completed_at: new Date(),
         },
       });

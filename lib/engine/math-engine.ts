@@ -4,7 +4,9 @@ export interface MathEngineInput {
   toolKey: string;
   planKey: string;
   teamSize: number;
-  declaredBilling: number; // monthly
+  declaredBilling: number; // monthly (fallback)
+  actualBilling?: number;  // what they actually pay
+  planPricing?: number;    // price per unit of the plan
   usagePattern?: "light" | "medium" | "heavy";
 }
 
@@ -26,36 +28,33 @@ export interface MathEngineResult {
     case2: CaseResult;
     case3: CaseResult;
     case4: CaseResult;
-    case5: CaseResult;
   };
   
   totalSavingsMonthly: number;
   heroVerdict: string;
 }
 
-// Helper to group tools for Case 5...
-const TOOL_CATEGORIES: Record<string, string[]> = {
-  coding: ["cursor", "github_copilot", "windsurf"],
-  assistant: ["claude", "chatgpt", "gemini"],
-};
+// MATH ENGINE LOGIC ...
 
 export function runMathEngine(input: MathEngineInput): MathEngineResult {
-  const { toolKey, planKey, teamSize, declaredBilling, usagePattern = "medium" } = input;
+  const { toolKey, planKey, teamSize, declaredBilling, actualBilling, planPricing, usagePattern = "medium" } = input;
   const tool = TOOL_PRICING[toolKey];
+  
+  // The value we compare against...
+  const actualSpend = actualBilling ?? declaredBilling;
   
   // Default empty result...
   const result: MathEngineResult = {
     toolKey,
     planKey,
     teamSize,
-    declaredBilling,
+    declaredBilling: actualSpend,
     expectedBilling: 0,
     cases: {
       case1: { active: false, message: "", savingsMonthly: 0 },
       case2: { active: false, message: "", savingsMonthly: 0 },
       case3: { active: false, message: "", savingsMonthly: 0 },
       case4: { active: false, message: "", savingsMonthly: 0 },
-      case5: { active: false, message: "", savingsMonthly: 0 },
     },
     totalSavingsMonthly: 0,
     heroVerdict: "",
@@ -67,16 +66,17 @@ export function runMathEngine(input: MathEngineInput): MathEngineResult {
   }
 
   const plan = tool.plans[planKey];
+  const unitPrice = planPricing ?? plan.price;
   
   // Calculate expected billing
   let expectedBilling = 0;
   if (plan.type === "per_user") {
-    expectedBilling = teamSize * plan.price;
+    expectedBilling = teamSize * unitPrice;
   } else if (plan.type === "flat_rate") {
-    expectedBilling = plan.price;
+    expectedBilling = unitPrice;
   } else if (plan.type === "usage_based") {
     // Basic estimation if they selected an API plan directly (rare for this form, but handled)
-    expectedBilling = declaredBilling > 0 ? declaredBilling : teamSize * 5; 
+    expectedBilling = actualSpend > 0 ? actualSpend : teamSize * 5; 
   }
   result.expectedBilling = expectedBilling;
 
@@ -85,7 +85,7 @@ export function runMathEngine(input: MathEngineInput): MathEngineResult {
   let totalSavings = 0;
 
   // --- CASE 1: Expected vs Actual Discrepancy ---
-  const delta = expectedBilling - declaredBilling;
+  const delta = expectedBilling - actualSpend;
   const deltaPct = expectedBilling > 0 ? delta / expectedBilling : 0;
   
   if (deltaPct < -0.05) {
@@ -94,7 +94,7 @@ export function runMathEngine(input: MathEngineInput): MathEngineResult {
     result.cases.case1 = {
       active: true,
       savingsMonthly: overpayment,
-      message: `You're paying $${declaredBilling}/mo but expected $${expectedBilling}/mo for ${teamSize} seats on ${tool.name} ${planKey}. Likely cause: orphaned seats, hidden fees, or legacy pricing.`,
+      message: `You're paying $${actualSpend}/mo but expected $${expectedBilling}/mo for ${teamSize} seats on ${tool.name} ${planKey}. Likely cause: orphaned seats, hidden fees, or legacy pricing.`,
     };
     totalSavings += overpayment;
   } else if (deltaPct > 0.05) {
@@ -102,7 +102,7 @@ export function runMathEngine(input: MathEngineInput): MathEngineResult {
     result.cases.case1 = {
       active: true,
       savingsMonthly: 0,
-      message: `You're paying $${declaredBilling}/mo but expected $${expectedBilling}/mo for ${teamSize} seats on ${tool.name} ${planKey}. Likely cause: grandfathered plan or volume discount. Protect this plan!`,
+      message: `You're paying $${actualSpend}/mo but expected $${expectedBilling}/mo for ${teamSize} seats on ${tool.name} ${planKey}. Likely cause: grandfathered plan or volume discount. Protect this plan!`,
     };
   } else {
     // Healthy
@@ -131,8 +131,9 @@ export function runMathEngine(input: MathEngineInput): MathEngineResult {
 
     if (downgradePlanKey) {
       const lowerPlan = tool.plans[downgradePlanKey];
+      const lowerPlanUnitPrice = planPricing ?? lowerPlan.price; // Use planPricing if provided, but this is for downgrades so might be tricky
       const lowerPlanCost = lowerPlan.type === "per_user" ? lowerPlan.price * teamSize : lowerPlan.price;
-      const savings = declaredBilling - lowerPlanCost;
+      const savings = actualSpend - lowerPlanCost;
       
       if (savings > 0) {
         result.cases.case2 = {
@@ -149,8 +150,8 @@ export function runMathEngine(input: MathEngineInput): MathEngineResult {
   // --- CASE 3: Annual Billing Arbitrage ---
   if (!foundActionableSavings && isClean && expectedBilling > 0) {
     // If they are paying exactly the monthly expected rate
-    if (Math.abs(declaredBilling - expectedBilling) < 2) {
-      const savings = declaredBilling * 0.20; // 20% savings assumption
+    if (Math.abs(actualSpend - expectedBilling) < 2) {
+      const savings = actualSpend * 0.20; // 20% savings assumption
       result.cases.case3 = {
         active: true,
         savingsMonthly: savings,
@@ -167,58 +168,16 @@ export function runMathEngine(input: MathEngineInput): MathEngineResult {
       // Estimate API cost per user (e.g., $5/mo for light usage)
       const apiEstimatedCostPerUser = 5; 
       const apiEstimatedTotal = teamSize * apiEstimatedCostPerUser;
-      const savings = declaredBilling - apiEstimatedTotal;
+      const savings = actualSpend - apiEstimatedTotal;
 
       if (savings > 0) {
         result.cases.case4 = {
           active: true,
           savingsMonthly: savings,
-          message: `At ${teamSize} developers on ${planKey} ($${declaredBilling}/mo total), switching to API-based access at ~$${apiEstimatedCostPerUser}/user/mo saves ~$${savings}/mo. Only viable if usage is light — confirm with your team before switching.`,
+          message: `At ${teamSize} developers on ${planKey} ($${actualSpend}/mo total), switching to API-based access at ~$${apiEstimatedCostPerUser}/user/mo saves ~$${savings}/mo. Only viable if usage is light — confirm with your team before switching.`,
         };
         totalSavings += savings;
         foundActionableSavings = true;
-      }
-    }
-  }
-
-  // --- CASE 5: Alternative Tool Recommendation ---
-  if (!foundActionableSavings) {
-    // Find category
-    const category = Object.keys(TOOL_CATEGORIES).find(cat => TOOL_CATEGORIES[cat].includes(toolKey));
-    
-    if (category) {
-      let bestAlt: { name: string; cost: number; savings: number } | null = null;
-      
-      for (const altToolKey of TOOL_CATEGORIES[category]) {
-        if (altToolKey === toolKey) continue;
-        
-        const altTool = TOOL_PRICING[altToolKey];
-        // Find comparable pro/team plan
-        const altPlanKey = Object.keys(altTool.plans).find(k => k === planKey || (k.includes("pro") && planKey.includes("pro"))) || "pro";
-        
-        if (altTool.plans[altPlanKey]) {
-          const altPlan = altTool.plans[altPlanKey];
-          const altCost = altPlan.type === "per_user" ? altPlan.price * teamSize : altPlan.price;
-          const savings = declaredBilling - altCost;
-          
-          if (bestAlt === null || savings > bestAlt.savings) {
-            bestAlt = { name: altTool.name, cost: altCost, savings };
-          }
-        }
-      }
-
-      if (bestAlt && bestAlt.savings > 0) {
-        const savingsPct = bestAlt.savings / declaredBilling;
-        if (savingsPct > 0.15) {
-          const strength = savingsPct > 0.30 ? "Strongly recommend switch" : "Mention as option";
-          result.cases.case5 = {
-            active: true,
-            savingsMonthly: bestAlt.savings,
-            message: `${bestAlt.name} covers this use case at $${bestAlt.cost}/mo vs your current $${declaredBilling}/mo — $${bestAlt.savings}/mo savings. (${strength})`,
-          };
-          totalSavings += bestAlt.savings;
-          foundActionableSavings = true;
-        }
       }
     }
   }

@@ -28,6 +28,8 @@ model Audit {
   input_team_size       Int
   input_plan            String
   input_billing         Decimal
+  input_actual_billing  Decimal?
+  input_plan_pricing    Decimal?
   input_tasks           String      @db.Text
   input_email           String
   input_company         String
