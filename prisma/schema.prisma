@@ -19,6 +19,14 @@ enum AuditStatus {
   completed
   failed
 }
+
+enum LeadStatus {
+  captured
+  high_savings_flagged
+  contacted
+  converted
+}
+
 model Audit {
   id                    String      @id @default(uuid())
   status                AuditStatus @default(pending)
@@ -33,6 +41,11 @@ model Audit {
   input_tasks           String      @db.Text
   input_email           String
   input_company         String
+  input_role            String?     // Capture user role
+  
+  // Lead Intelligence
+  is_high_savings       Boolean     @default(false)
+  lead_status           LeadStatus  @default(captured)
   
   // Output fields
   output_spend          Decimal?

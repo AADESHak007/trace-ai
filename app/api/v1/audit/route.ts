@@ -7,8 +7,8 @@ export  async function POST(req:Request){
 try {
         
         //get the reqd response from body
-        const {tool , teamSize , plan ,billing ,actualBilling, planPricing, tasks ,email,company} = await req.json() ;
-        console.log(tool , teamSize , plan ,billing ,actualBilling, planPricing, tasks ,email,company)
+        const {tool , teamSize , plan ,billing ,actualBilling, planPricing, tasks ,email,company, role} = await req.json() ;
+        console.log(tool , teamSize , plan ,billing ,actualBilling, planPricing, tasks ,email,company, role)
         
         console.log("DB upload started ...")
         //saving the inital data in the DB and getting the ID ... 
@@ -23,6 +23,7 @@ try {
                 input_tasks:tasks,
                 input_email:email,
                 input_company:company,
+                input_role:role,
                 status:"pending"
             }
         })

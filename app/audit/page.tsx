@@ -35,6 +35,7 @@ type ApiPayload = {
   tasks: string;      // input_tasks → String (Text)
   email: string;      // input_email → String
   company: string;    // input_company → String
+  role: string;       // input_role → String
 };
 
 export default function AuditPage() {
@@ -47,6 +48,7 @@ export default function AuditPage() {
   const [tasks, setTasks]     = useState("");                  
   const [email, setEmail]     = useState("");                  
   const [company, setCompany] = useState("");                  
+  const [role, setRole]       = useState("");                  
 
   const [step, setStep] = useState<"form" | "loading" | "results">("form");
   const [progress, setProgress] = useState(0);
@@ -86,6 +88,7 @@ export default function AuditPage() {
         tasks,
         email,
         company,
+        role,
       };
 
       const res = await fetch(`${baseUrl}/api/v1/audit`, {
@@ -159,19 +162,26 @@ export default function AuditPage() {
                   <p className="text-[#666] text-[15px]">Each field maps directly to what our engine needs.</p>
                 </div>
 
-                {/* ROW 1: email + company */}
-                <div className="grid grid-cols-2 gap-5">
-                  <Field label="email" hint="input_email · String">
+                {/* ROW 1: email + company + role */}
+                <div className="grid grid-cols-3 gap-5">
+                  <Field label="email" hint="input_email">
                     <input
                       type="email" placeholder="alex@acme.com"
                       value={email} onChange={e => setEmail(e.target.value)}
                       className={inputCls}
                     />
                   </Field>
-                  <Field label="company" hint="input_company · String">
+                  <Field label="company" hint="input_company">
                     <input
                       type="text" placeholder="Acme Inc."
                       value={company} onChange={e => setCompany(e.target.value)}
+                      className={inputCls}
+                    />
+                  </Field>
+                  <Field label="role" hint="input_role">
+                    <input
+                      type="text" placeholder="CTO / Finance"
+                      value={role} onChange={e => setRole(e.target.value)}
                       className={inputCls}
                     />
                   </Field>

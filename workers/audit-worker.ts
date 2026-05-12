@@ -4,6 +4,7 @@ import { prisma } from "../lib/prisma";
 import { connection } from "../lib/queue";
 import { runMathEngine } from "../lib/engine/math-engine";
 import { runLLMEngine } from "../lib/engine/llm-engine";
+import { TOOL_PRICING } from "../lib/data/pricing";
 
 console.log("Audit Worker started and waiting for jobs...");
 
@@ -41,7 +42,8 @@ const worker = new Worker(
 
       // 3.1 Run the LLM Strategy Engine
       const llmResult = await runLLMEngine({
-        tool: audit.input_tool,
+        tool: TOOL_PRICING[audit.input_tool]?.name || audit.input_tool,
+        toolKey: audit.input_tool,
         plan: audit.input_plan,
         teamSize: audit.input_team_size,
         tasks: audit.input_tasks,
@@ -49,18 +51,23 @@ const worker = new Worker(
       });
 
       // 4. Update the DB with the results
-      // We map the math findings to your DB schema
+      const totalMonthlySaving = mathResult.totalSavingsMonthly + llmResult.additionalMonthlySavings;
+      const isHighSavings = totalMonthlySaving > 500;
+
       await prisma.audit.update({
         where: { id: auditId },
         data: {
           status: "completed",
           output_spend: audit.input_billing,
-          output_monthly_saving: mathResult.totalSavingsMonthly + llmResult.additionalMonthlySavings,
-          output_annual_saving: (mathResult.totalSavingsMonthly + llmResult.additionalMonthlySavings) * 12,
+          output_monthly_saving: totalMonthlySaving,
+          output_annual_saving: totalMonthlySaving * 12,
           output_recommendation: llmResult.recommendation,
           output_savings_reason: llmResult.savingsReason,
           llm_raw_response: llmResult as any,
           completed_at: new Date(),
+          // Lead intelligence
+          is_high_savings: isHighSavings,
+          lead_status: isHighSavings ? "high_savings_flagged" : "captured",
         },
       });
 
