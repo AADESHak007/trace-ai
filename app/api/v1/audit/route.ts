@@ -8,7 +8,9 @@ try {
         
         //get the reqd response from body
         const {tool , teamSize , plan ,billing ,tasks ,email,company} = await req.json() ;
+        console.log(tool , teamSize , plan ,billing ,tasks ,email,company)
         
+        console.log("DB upload started ...")
         //saving the inital data in the DB and getting the ID ... 
         const audit =  await prisma.audit.create({
             data: {
@@ -22,12 +24,15 @@ try {
                 status:"pending"
             }
         })
+
+        console.log("DB upload done and now adding to queue ....")
     
         //send the data to the queue ... 
         await auditQueue.add("process-audit" ,{
             auditId: audit.id
         }) ;
         
+        console.log("added to queue")
         //return the job-id ...
         
         return NextResponse.json({

@@ -25,7 +25,6 @@ const ALL_TOOLS = Object.entries(TOOL_PRICING).map(([key, val]) => ({
   plans: Object.keys(val.plans),
 }));
 
-// ─── State shapes that mirror the API body 1-to-1 ──────────────────────────
 type ApiPayload = {
   tool: string;       // input_tool  → String
   teamSize: number;   // input_team_size → Int
@@ -38,14 +37,14 @@ type ApiPayload = {
 
 export default function AuditPage() {
 
-  // Each field = exactly one API/schema field
-  const [tool, setTool]       = useState("chatgpt");           // input_tool
-  const [plan, setPlan]       = useState("plus");              // input_plan
-  const [billing, setBilling] = useState<number>(20);          // input_billing (Decimal)
-  const [teamSize, setTeamSize] = useState<number>(10);        // input_team_size (Int)
-  const [tasks, setTasks]     = useState("");                  // input_tasks
-  const [email, setEmail]     = useState("");                  // input_email
-  const [company, setCompany] = useState("");                  // input_company
+
+  const [tool, setTool]       = useState("chatgpt");
+  const [plan, setPlan]       = useState("plus");
+  const [billing, setBilling] = useState<number>(20);
+  const [teamSize, setTeamSize] = useState<number>(10);        
+  const [tasks, setTasks]     = useState("");                  
+  const [email, setEmail]     = useState("");                  
+  const [company, setCompany] = useState("");                  
 
   const [step, setStep] = useState<"form" | "loading" | "results">("form");
   const [progress, setProgress] = useState(0);
@@ -55,7 +54,7 @@ export default function AuditPage() {
   const selectedToolData = TOOL_PRICING[tool];
   const SelectedIcon = getIcon(tool);
 
-  // When tool changes, reset plan + billing to the tool's first plan
+  // When tool changes, reset plan + billing to the tool's first plan ....
   const handleToolChange = (toolKey: string) => {
     setTool(toolKey);
     const firstPlan = Object.keys(TOOL_PRICING[toolKey].plans)[0];
@@ -63,7 +62,7 @@ export default function AuditPage() {
     setBilling(TOOL_PRICING[toolKey].plans[firstPlan].price);
   };
 
-  // When plan changes, auto-fill billing from ground-truth data
+  // When plan changes, auto-fill billing from ground-truth data ....
   const handlePlanChange = (planKey: string) => {
     setPlan(planKey);
     setBilling(TOOL_PRICING[tool].plans[planKey].price);
@@ -75,7 +74,6 @@ export default function AuditPage() {
     try {
       const baseUrl = process.env.NEXT_PUBLIC_API_URL || "";
 
-      // Payload matches API body exactly
       const payload: ApiPayload = {
         tool,
         teamSize: Number(teamSize),
