@@ -1,10 +1,11 @@
 import "dotenv/config";
 import { Worker, Job } from "bullmq";
 import { prisma } from "../lib/prisma";
-import { connection } from "../lib/queue";
+import { connection, emailQueue } from "../lib/queue";
 import { runMathEngine } from "../lib/engine/math-engine";
 import { runLLMEngine } from "../lib/engine/llm-engine";
 import { TOOL_PRICING } from "../lib/data/pricing";
+import { getAuditReportEmailHtml } from "../lib/email-templates";
 
 console.log("Audit Worker started and waiting for jobs...");
 
@@ -72,6 +73,21 @@ const worker = new Worker(
       });
 
       console.log(`Audit ${auditId} completed successfully!`);
+
+      // 5. Trigger Email Notification
+      await emailQueue.add("send-audit-report", {
+        to: audit.input_email,
+        subject: `Your ${audit.input_company} AI Audit is Ready`,
+        html: getAuditReportEmailHtml({
+          company: audit.input_company,
+          tool: TOOL_PRICING[audit.input_tool]?.name || audit.input_tool,
+          savingsMonthly: totalMonthlySaving,
+          savingsAnnual: totalMonthlySaving * 12,
+          recommendation: llmResult.recommendation,
+          isHighSavings: isHighSavings
+        })
+      });
+
     } catch (error: any) {
       console.error(`Error processing audit ${auditId}:`, error);
 

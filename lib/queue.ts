@@ -23,4 +23,17 @@ export const auditQueue = new Queue("audit-queue" , {
     }
 })
 
+export const emailQueue = new Queue("email-queue" , {
+    connection ,
+    defaultJobOptions : {
+        attempts : 3 ,
+        backoff : {
+            type :"exponential",
+            delay : 1000
+        },
+        removeOnComplete :true ,
+        removeOnFail :false ,
+    }
+})
+
 export {connection} ;
