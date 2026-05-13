@@ -20,7 +20,8 @@ During a mid-week strategy review, I realized that requiring a verified domain a
 ---
 
 ## 3. Week 2 Vision: Automated Negotiation & Continuous Monitoring
-If I had a second week, the primary focus would be make the tool more marketable by working more on the Ui and audit engine
+If I had a second week, the primary focus would be make the tool more marketable by working more on the Ui and audit engine.
+The current math engine for tools like Cursor and ChatGPT assumes a hardcoded 'medium' usage pattern (800K input/150K output tokens per month) to calculate API-vs-Subscription arbitrage. This leads to inaccurate savings estimates: it underestimates costs for data teams hitting token limits daily and overestimates them for light users. If I had another 48 hours, I’d replace the hardcoded 'medium' flag in the audit-worker.ts with a dynamic usage-intensity engine. I would implement an LLM-based classifier that analyzes the user's 'task description' to assign a weighted token multiplier (e.g., 0.5x for light, 3.0x for heavy). This would transform the 'Case 4' savings from a rough estimate into a defensible financial recommendation, specifically helping teams decide between a $20/seat flat plan and a usage-based API model where the price spread is often >$100/mo for larger teams
 
 **Core Features:**
 - **AI Negotiation Liaison:** Based on user feedback from Interview 02 (Haseeb), users want the tool to not just find waste, but to fix it. I would build an LLM-driven agent that can draft negotiation emails to SaaS vendors based on the audit's findings (e.g., citing lower pricing of competitors like Windsurf to get a discount on Cursor).
