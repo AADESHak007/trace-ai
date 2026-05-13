@@ -24,7 +24,7 @@ try {
         if (requestCount === 1) {
             await connection.expire(rateLimitKey, 3600); // 1 hour window
         }
-        if (requestCount > 5) {
+        if (requestCount > 7) {
             return NextResponse.json({ 
                 message: "Too many audits. Please try again in an hour.", 
                 success: false 
