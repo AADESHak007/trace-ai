@@ -1,7 +1,6 @@
 "use client"
 
 import Link from "next/link";
-import { ShieldCheck } from "lucide-react";
 
 export const Navbar = () => {
   return (

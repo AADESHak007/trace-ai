@@ -1,6 +1,5 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { MathEngineResult } from "./math-engine";
-import { TOOL_PRICING } from "../data/pricing";
 
 export interface LLMEngineInput {
   tool: string;       // display name e.g. "Cursor"
@@ -165,7 +164,7 @@ function buildFallbackSummary(
 // ---------------------------------------------------------------------------
 
 export async function runLLMEngine(input: LLMEngineInput): Promise<LLMEngineResult> {
-  const { tool, toolKey, plan, teamSize, tasks, mathResults } = input;
+  const { tool, plan, teamSize, tasks, mathResults } = input;
   const actualSpend = mathResults.declaredBilling;
 
   // Build structured findings from math engine output

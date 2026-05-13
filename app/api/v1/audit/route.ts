@@ -20,9 +20,9 @@ try {
         }
 
         // 4. Rate Limiting (5 requests per hour)
-        const requestCount = await (connection as any).incr(rateLimitKey);
+        const requestCount = await connection.incr(rateLimitKey);
         if (requestCount === 1) {
-            await (connection as any).expire(rateLimitKey, 3600); // 1 hour window
+            await connection.expire(rateLimitKey, 3600); // 1 hour window
         }
         if (requestCount > 5) {
             return NextResponse.json({ 

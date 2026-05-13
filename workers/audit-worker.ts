@@ -6,6 +6,7 @@ import { runMathEngine } from "../lib/engine/math-engine";
 import { runLLMEngine } from "../lib/engine/llm-engine";
 import { TOOL_PRICING } from "../lib/data/pricing";
 import { getAuditReportEmailHtml } from "../lib/email-templates";
+import { Prisma } from "@prisma/client";
 
 console.log("Audit Worker started and waiting for jobs...");
 
@@ -64,7 +65,8 @@ const worker = new Worker(
           output_annual_saving: totalMonthlySaving * 12,
           output_recommendation: llmResult.recommendation,
           output_savings_reason: llmResult.savingsReason,
-          llm_raw_response: llmResult as any,
+          // We use InputJsonValue to satisfy Prisma's strict JSON typing
+          llm_raw_response: llmResult as unknown as Prisma.InputJsonValue, 
           completed_at: new Date(),
           // Lead intelligence
           is_high_savings: isHighSavings,
@@ -88,7 +90,8 @@ const worker = new Worker(
         })
       });
 
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : "Unknown worker error";
       console.error(`Error processing audit ${auditId}:`, error);
 
       // Update DB to failed so polling stops
@@ -96,7 +99,7 @@ const worker = new Worker(
         where: { id: auditId },
         data: {
           status: "failed",
-          error_message: error.message || "Unknown worker error",
+          error_message: errorMessage,
         },
       });
     }

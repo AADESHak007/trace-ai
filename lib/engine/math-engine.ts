@@ -40,21 +40,6 @@ export interface MathEngineResult {
 // ---------------------------------------------------------------------------
 
 /**
- * Calculate the monthly cost of a plan for a given team size.
- * Returns Infinity for unknown plan types so they never win a min() comparison.
- */
-function planCost(planKey: string, toolKey: string, teamSize: number): number {
-  const tool = TOOL_PRICING[toolKey];
-  if (!tool) return Infinity;
-  const plan = tool.plans[planKey];
-  if (!plan) return Infinity;
-
-  if (plan.type === "per_user") return plan.price * teamSize;
-  if (plan.type === "flat_rate") return plan.price;
-  return Infinity; // usage_based plans can't be compared without token data
-}
-
-/**
  * Estimate monthly API cost from token-based pricing.
  * Token assumptions (documented in PRICING_DATA.md):
  *   light  → 300K input  + 50K output  tokens/user/month

@@ -69,7 +69,7 @@ export const Hero = () => {
 
         {/* Subtitle */}
         <p className="text-[15px] text-[#555] leading-[1.6] mb-5 max-w-[340px]">
-          TRACE audits your AI tool stack and tells you exactly where you're overpaying, how much, and how to fix it.
+          TRACE audits your AI tool stack and tells you exactly where you&apos;re overpaying, how much, and how to fix it.
         </p>
 
         {/* Checklist */}

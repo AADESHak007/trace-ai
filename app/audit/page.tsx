@@ -2,16 +2,16 @@
 
 import { Navbar } from "@/components/Navbar";
 import { 
-  ShieldCheck, Zap, Lock, ArrowLeft, ArrowRight,
+  ShieldCheck, Zap, Lock, ArrowLeft,
   Bot, GitFork, FileText, Laptop, Cpu, BrainCircuit, Terminal,
-  Trash2, Plus, Search, Code, TrendingUp, ChevronRight, CheckCircle2,
-  AlertCircle, DollarSign, BarChart3, Mail, Building2, User
+  ChevronRight, CheckCircle2, Search,
+  Mail, Building2, User, DollarSign, LucideIcon
 } from "lucide-react";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { TOOL_PRICING } from "@/lib/data/pricing";
 
-const getIcon = (toolKey: string) => {
-  const map: Record<string, any> = {
+const getIcon = (toolKey: string): LucideIcon => {
+  const map: Record<string, LucideIcon> = {
     chatgpt: Bot, claude: BrainCircuit, cursor: Laptop,
     windsurf: Terminal, github_copilot: GitFork,
     openai_api: Cpu, anthropic_api: Cpu, gemini: Bot,
@@ -53,7 +53,7 @@ export default function AuditPage() {
 
   const [step, setStep] = useState<"form" | "loading" | "results">("form");
   const [progress, setProgress] = useState(0);
-  const [apiData, setApiData]   = useState<any>(null);
+  const [apiData, setApiData]   = useState<Record<string, unknown> | null>(null);
   const [copied, setCopied]     = useState(false);
 
   const selectedToolData = TOOL_PRICING[tool];
@@ -100,9 +100,11 @@ export default function AuditPage() {
 
       setProgress(30);
       pollStatus(init.jobId);
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error(err);
-      alert(err.message);
+      if (err instanceof Error) {
+        alert(err.message);
+      }
       setStep("form");
     }
   };
@@ -115,7 +117,7 @@ export default function AuditPage() {
         const result = await res.json();
         if (result.success && result.data) {
           clearInterval(interval);
-          setApiData(result.data);
+          setApiData(result.data as Record<string, unknown>);
           setProgress(100);
           setTimeout(() => setStep("results"), 500);
         } else {
@@ -340,7 +342,7 @@ export default function AuditPage() {
                     <span className="text-[10px] font-black uppercase tracking-[0.4em] text-gray-500">Executive Summary</span>
                   </div>
                   <h2 className="text-4xl md:text-5xl font-black tracking-tight leading-[1.1] max-w-2xl">
-                    {apiData.output_recommendation}
+                    {apiData.output_recommendation as string}
                   </h2>
                 </div>
                 <div className="relative z-10 mt-12 pt-8 border-t border-white/5 flex items-center gap-6">
@@ -361,7 +363,7 @@ export default function AuditPage() {
                 </div>
                 <div className="space-y-4">
                   <div className="text-white/80 font-bold leading-tight">
-                    We've identified potential savings of ${Number(apiData.output_monthly_saving).toLocaleString()} per month.
+                    We&apos;ve identified potential savings of ${Number(apiData.output_monthly_saving).toLocaleString()} per month.
                   </div>
                   <button className="w-full bg-white text-blue-600 font-black py-4 rounded-2xl hover:scale-105 transition-all">
                     Claim Refund
@@ -383,7 +385,8 @@ export default function AuditPage() {
                   
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     {(() => {
-                      const reasons = apiData.output_savings_reason?.split(" | ") || [];
+                      const rawReasons = (apiData.output_savings_reason as string) || "";
+                      const reasons = rawReasons.split(" | ");
                       return reasons.map((raw: string, i: number) => {
                         const reason = raw.replace(/\[CASE\d+\]/gi, "").trim();
                         const hasArrow = reason.includes(" \u2192 ");
@@ -414,13 +417,13 @@ export default function AuditPage() {
                 <div className="glass rounded-[40px] p-8 border-white/5">
                   <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-gray-500 mb-8">Audit Profile</h3>
                   <div className="space-y-6">
-                    <ContextRow label="Entity" value={apiData.input_company} icon={<Building2 size={14}/>} />
-                    <ContextRow label="Seats" value={`${apiData.input_team_size} Users`} icon={<User size={14}/>} />
+                    <ContextRow label="Entity" value={apiData.input_company as string} icon={<Building2 size={14}/>} />
+                    <ContextRow label="Seats" value={`${apiData.input_team_size as number} Users`} icon={<User size={14}/>} />
                     <ContextRow 
                       label="Current Tool" 
-                      value={apiData.input_tool_key?.replace("_", " ")} 
+                      value={(apiData.input_tool_key as string)?.replace("_", " ")} 
                       icon={(() => {
-                        const Icon = getIcon(apiData.input_tool_key);
+                        const Icon = getIcon(apiData.input_tool_key as string);
                         return <Icon size={14} />;
                       })()} 
                     />
@@ -429,7 +432,7 @@ export default function AuditPage() {
                 </div>
 
                 {/* Additional Insight if case 5 exists */}
-                {apiData.llm_raw_response?.additionalMonthlySavings > 0 && (
+                {Number((apiData.llm_raw_response as { additionalMonthlySavings: number })?.additionalMonthlySavings ?? 0) > 0 && (
                   <div className="bg-gradient-to-br from-indigo-600 to-purple-700 rounded-[40px] p-8 space-y-6 shadow-xl relative overflow-hidden group">
                     <div className="absolute -bottom-10 -right-10 w-40 h-40 bg-white/10 blur-[50px] rounded-full group-hover:scale-150 transition-transform duration-1000" />
                     <div className="flex items-center gap-3 relative z-10">
@@ -437,7 +440,7 @@ export default function AuditPage() {
                       <span className="text-[10px] font-black uppercase tracking-[0.3em] text-white/60">Migration Arbitrage</span>
                     </div>
                     <h4 className="text-xl font-bold text-white relative z-10 leading-tight">
-                      Switching to an alternative vendor could recover an extra <span className="text-yellow-300">${Number(apiData.llm_raw_response.additionalMonthlySavings * 12).toLocaleString()}/year.</span>
+                      Switching to an alternative vendor could recover an extra <span className="text-yellow-300">${Number((apiData.llm_raw_response as { additionalMonthlySavings: number }).additionalMonthlySavings * 12).toLocaleString()}/year.</span>
                     </h4>
                   </div>
                 )}
@@ -456,7 +459,7 @@ export default function AuditPage() {
                 </button>
                 <button 
                   onClick={() => {
-                    const url = `${window.location.origin}/share/${apiData.id}`;
+                    const url = `${window.location.origin}/share/${apiData.id as string}`;
                     navigator.clipboard.writeText(url);
                     setCopied(true);
                     setTimeout(() => setCopied(false), 2000);

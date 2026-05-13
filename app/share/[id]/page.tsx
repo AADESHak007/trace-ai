@@ -2,8 +2,8 @@ import { prisma } from "@/lib/prisma";
 import { TOOL_PRICING } from "@/lib/data/pricing";
 import { Metadata } from "next";
 import { 
-  ShieldCheck, TrendingUp, Zap, ArrowRight, 
-  BrainCircuit, GitFork, Lock, Cpu 
+  TrendingUp, Zap, ArrowRight, 
+  BrainCircuit
 } from "lucide-react";
 import Link from "next/link";
 import { Navbar } from "@/components/Navbar";
@@ -67,7 +67,7 @@ export default async function SharePage({ params }: Props) {
 
   const toolName = TOOL_PRICING[audit.input_tool]?.name || audit.input_tool;
   const savingsAnnual = Number(audit.output_annual_saving || 0);
-  const aiSummary = (audit.llm_raw_response as any)?.summary || audit.output_recommendation;
+  const aiSummary = (audit.llm_raw_response as { summary?: string })?.summary || audit.output_recommendation;
 
   return (
     <div className="h-screen bg-[#050505] text-white font-sans overflow-hidden flex flex-col relative">
@@ -131,7 +131,7 @@ export default async function SharePage({ params }: Props) {
             </div>
             <div className="flex-1 overflow-y-auto pr-4 scrollbar-hide">
               <p className="text-[17px] md:text-[19px] text-gray-200 leading-[1.7] font-medium italic">
-                "{aiSummary}"
+                &quot;{aiSummary}&quot;
               </p>
             </div>
             <div className="mt-6 pt-6 border-t border-white/5 text-[11px] text-gray-500 font-bold uppercase tracking-widest">
