@@ -1,6 +1,14 @@
 import "dotenv/config";
+import http from "http";
 import { Worker, Job } from "bullmq";
 import nodemailer from "nodemailer";
+
+// Dummy server to satisfy Render's health check for Free Web Services
+http.createServer((req, res) => {
+  res.writeHead(200, { 'Content-Type': 'text/plain' });
+  res.end("Email Worker is active");
+}).listen(process.env.PORT || 3001);
+
 import { connection } from "../lib/queue";
 
 console.log("Email Worker started...");

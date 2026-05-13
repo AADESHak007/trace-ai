@@ -1,5 +1,13 @@
 import "dotenv/config";
+import http from "http";
 import { Worker, Job } from "bullmq";
+
+// Dummy server to satisfy Render's health check for Free Web Services
+http.createServer((req, res) => {
+  res.writeHead(200, { 'Content-Type': 'text/plain' });
+  res.end("Audit Worker is active");
+}).listen(process.env.PORT || 3000);
+
 import { prisma } from "../lib/prisma";
 import { connection, emailQueue } from "../lib/queue";
 import { runMathEngine } from "../lib/engine/math-engine";
