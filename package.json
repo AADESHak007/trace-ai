@@ -9,6 +9,8 @@
     "lint": "eslint",
     "test": "tsx --test lib/engine/__tests__/*.test.ts",
     "postinstall": "prisma generate",
+    "worker:audit": "tsx workers/audit-worker.ts",
+    "worker:email": "tsx workers/email-worker.ts",
     "type": "module"
   },
   "dependencies": {
