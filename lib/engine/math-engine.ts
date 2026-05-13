@@ -192,7 +192,7 @@ export function runMathEngine(input: MathEngineInput): MathEngineResult {
   // -------------------------------------------------------------------------
   if (!foundActionableSavings && isOverpayingOrClean) {
     const cheaperEntries = Object.entries(tool.plans)
-      .filter(([key]) => key !== planKey)
+      .filter(([key, p]) => key !== planKey && p.price > 0) // exclude current and free/hobby plans
       .map(([key, p]) => {
         const cost =
           p.type === "per_user" ? p.price * teamSize :
