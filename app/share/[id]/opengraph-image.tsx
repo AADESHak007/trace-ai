@@ -2,7 +2,7 @@ import { ImageResponse } from "next/og";
 import { prisma } from "@/lib/prisma";
 import { TOOL_PRICING } from "@/lib/data/pricing";
 
-export const runtime = "edge";
+export const runtime = "nodejs";
 
 export const alt = "Trace AI Audit Report";
 export const size = {
