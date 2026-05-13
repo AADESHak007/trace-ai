@@ -1,32 +1,29 @@
 "use client"
 
 import Link from "next/link";
+import { ShieldCheck } from "lucide-react";
 
 export const Navbar = () => {
   return (
-    <nav className="h-full w-full bg-white border-b border-gray-100">
-      <div className="max-w-[1280px] mx-auto px-8 flex items-center h-full gap-10">
+    <nav className="h-20 w-full glass sticky top-0 z-50">
+      <div className="max-w-7xl mx-auto px-6 flex items-center h-full gap-10">
 
         {/* Logo */}
-        <Link href="/" className="flex items-center gap-2 font-extrabold text-[18px] text-[#111] tracking-tight shrink-0 no-underline">
-          <div className="grid grid-cols-2 gap-[3px]">
-            {[0, 1, 2, 3].map(i => (
-              <div
-                key={i}
-                className={`w-[9px] h-[9px] rounded-[2px] ${i < 2 ? "bg-[#5b21b6]" : "bg-[#a78bfa]"}`}
-              />
-            ))}
+        <Link href="/" className="flex items-center gap-3 font-black text-xl text-white tracking-tighter shrink-0 no-underline">
+          <div className="flex -space-x-1">
+            <div className="w-5 h-5 rounded-md bg-blue-600 shadow-[0_0_15px_rgba(37,99,235,0.4)]" />
+            <div className="w-5 h-5 rounded-md bg-blue-400 opacity-80" />
           </div>
           TRACE
         </Link>
 
         {/* Nav Links */}
         <div className="hidden md:flex items-center gap-8 flex-1">
-          {["Product", "How it works", "Features", "Pricing", "Resources"].map(label => (
+          {["Audit Engine",].map(label => (
             <Link
               key={label}
               href="#"
-              className="text-[14px] font-medium text-[#444] hover:text-[#6d28d9] transition-colors no-underline"
+              className="text-[13px] font-bold uppercase tracking-widest text-gray-400 hover:text-white transition-all no-underline"
             >
               {label}
             </Link>
@@ -34,15 +31,12 @@ export const Navbar = () => {
         </div>
 
         {/* CTA */}
-        <div className="flex items-center gap-4 shrink-0">
-          <Link href="#" className="text-[14px] font-medium text-[#444] hover:text-[#6d28d9] transition-colors no-underline">
-            Sign in
-          </Link>
+        <div className="flex items-center gap-6 shrink-0">
           <Link
             href="#"
-            className="bg-[#6d28d9] hover:bg-[#5b21b6] text-white text-[14px] font-semibold px-5 py-2.5 rounded-xl transition-colors no-underline"
+            className="bg-white hover:bg-blue-50 text-blue-600 text-[13px] font-black px-6 py-3 rounded-xl transition-all no-underline shadow-xl shadow-blue-500/10"
           >
-            Book a demo
+            FREE AUDIT
           </Link>
         </div>
       </div>

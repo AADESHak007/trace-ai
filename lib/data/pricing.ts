@@ -60,7 +60,7 @@ export const TOOL_PRICING: Record<string, ToolPricing> = {
     name: "ChatGPT",
     plans: {
       free: { price: 0, type: "flat_rate", interval: "monthly" },
-      plus: { price: 20, type: "flat_rate", interval: "monthly" },
+      plus: { price: 20, type: "per_user", interval: "monthly" },
       team: { price: 25, type: "per_user", interval: "monthly" },
     },
     source: "https://chatgpt.com/pricing/",
@@ -90,9 +90,9 @@ export const TOOL_PRICING: Record<string, ToolPricing> = {
     name: "Google Gemini",
     plans: {
       free: { price: 0, type: "flat_rate", interval: "monthly" },
-      ai_plus: { price: 10, type: "flat_rate", interval: "monthly" },
-      ai_pro: { price: 20, type: "flat_rate", interval: "monthly" },
-      ai_ultra: { price: 30, type: "flat_rate", interval: "monthly" },
+      ai_plus: { price: 10, type: "per_user", interval: "monthly" },
+      ai_pro: { price: 20, type: "per_user", interval: "monthly" },
+      ai_ultra: { price: 30, type: "per_user", interval: "monthly" },
     },
     source: "https://gemini.google/subscriptions/",
     lastVerified: "2026-05-10",

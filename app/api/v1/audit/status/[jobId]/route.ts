@@ -21,12 +21,19 @@ export async function GET(req: Request, { params }: { params: Promise<{ jobId: s
         message: "Audit completed",
         success: true,
         data: {
+          id: audit.id,
+          input_company: audit.input_company,
+          input_tool_key: audit.input_tool,
+          input_team_size: audit.input_team_size,
+          input_plan: audit.input_plan,
+          input_actual_billing: audit.input_actual_billing,
           output_spend: audit.output_spend,
           output_recommendation: audit.output_recommendation,
           output_savings_reason: audit.output_savings_reason,
           output_monthly_saving: audit.output_monthly_saving,
           output_annual_saving: audit.output_annual_saving,
           completed_at: audit.completed_at,
+          llm_raw_response: audit.llm_raw_response,
         },
       });
     }

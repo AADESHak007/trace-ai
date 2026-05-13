@@ -8,7 +8,7 @@ export const tokens = {
     // Deep Space/Obsidian Palette
     background: "#030508",
     backgroundSecondary: "#0A0F17",
-    
+
     // Core Brand Colors
     primary: "#00F0FF", // Cyber Cyan
     primaryGlowing: "rgba(0, 240, 255, 0.4)",

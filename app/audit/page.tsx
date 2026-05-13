@@ -4,9 +4,10 @@ import { Navbar } from "@/components/Navbar";
 import { 
   ShieldCheck, Zap, Lock, ArrowLeft, ArrowRight,
   Bot, GitFork, FileText, Laptop, Cpu, BrainCircuit, Terminal,
-  Trash2, Plus, Search, Code, TrendingUp
+  Trash2, Plus, Search, Code, TrendingUp, ChevronRight, CheckCircle2,
+  AlertCircle, DollarSign, BarChart3, Mail, Building2, User
 } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { TOOL_PRICING } from "@/lib/data/pricing";
 
 const getIcon = (toolKey: string) => {
@@ -26,22 +27,20 @@ const ALL_TOOLS = Object.entries(TOOL_PRICING).map(([key, val]) => ({
 }));
 
 type ApiPayload = {
-  tool: string;       // input_tool  → String
-  teamSize: number;   // input_team_size → Int
-  plan: string;       // input_plan  → String
-  billing: number;    // input_billing → Decimal (fallback)
-  actualBilling: number; // what they pay
-  planPricing: number;   // ground-truth plan price
-  tasks: string;      // input_tasks → String (Text)
-  email: string;      // input_email → String
-  company: string;    // input_company → String
-  role: string;       // input_role → String
-  _hp: string;        // honeypot field
+  tool: string;       
+  teamSize: number;   
+  plan: string;       
+  billing: number;    
+  actualBilling: number; 
+  planPricing: number;   
+  tasks: string;      
+  email: string;      
+  company: string;    
+  role: string;       
+  _hp: string;        
 };
 
 export default function AuditPage() {
-
-
   const [tool, setTool]       = useState("chatgpt");
   const [plan, setPlan]       = useState("plus");
   const [billing, setBilling] = useState<number>(20);
@@ -55,12 +54,10 @@ export default function AuditPage() {
   const [step, setStep] = useState<"form" | "loading" | "results">("form");
   const [progress, setProgress] = useState(0);
   const [apiData, setApiData]   = useState<any>(null);
-  const [showRaw, setShowRaw]   = useState(false);
+  const [copied, setCopied]     = useState(false);
 
   const selectedToolData = TOOL_PRICING[tool];
-  const SelectedIcon = getIcon(tool);
 
-  // When tool changes, reset plan + billing to the tool's first plan ....
   const handleToolChange = (toolKey: string) => {
     setTool(toolKey);
     const firstPlan = Object.keys(TOOL_PRICING[toolKey].plans)[0];
@@ -68,7 +65,6 @@ export default function AuditPage() {
     setBilling(TOOL_PRICING[toolKey].plans[firstPlan].price);
   };
 
-  // When plan changes, auto-fill billing from ground-truth data ....
   const handlePlanChange = (planKey: string) => {
     setPlan(planKey);
     setBilling(TOOL_PRICING[tool].plans[planKey].price);
@@ -79,7 +75,6 @@ export default function AuditPage() {
     setProgress(10);
     try {
       const baseUrl = process.env.NEXT_PUBLIC_API_URL || "";
-
       const payload: ApiPayload = {
         tool,
         teamSize: Number(teamSize),
@@ -133,393 +128,403 @@ export default function AuditPage() {
   const planOptions = selectedToolData ? Object.keys(selectedToolData.plans) : [];
 
   return (
-    <div className="h-screen flex flex-col bg-[#F9FAFB] text-[#111] overflow-hidden font-sans">
-      <style jsx global>{`
-        @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap');
-        body { font-family: 'DM Sans', system-ui, sans-serif; }
-      `}</style>
+    <div className="min-h-screen bg-[#0A0A0A] text-white selection:bg-blue-500/30 selection:text-blue-200">
+      <div className="bg-glow" />
+      
+      {/* NAVBAR */}
+      <Navbar />
 
-      {/* NAVBAR — 10vh */}
-      <div className="h-[10vh] shrink-0 bg-white border-b border-gray-100">
-        <Navbar />
-      </div>
+      <main className="max-w-7xl mx-auto px-6 py-12">
+        {/* Navigation / Header */}
+        <div className="flex items-center justify-between mb-12">
+          <button
+            onClick={() => setStep("form")}
+            className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors text-sm font-medium group"
+          >
+            <ArrowLeft size={16} className="group-hover:-translate-x-1 transition-transform" />
+            {step === "results" ? "Restart Audit" : "Back to Home"}
+          </button>
+          
+          <div className="flex items-center gap-2 text-[10px] uppercase tracking-[0.3em] font-bold text-blue-500 bg-blue-500/10 px-4 py-2 rounded-full border border-blue-500/20">
+            <ShieldCheck size={12} />
+            Enterprise Guard Active
+          </div>
+        </div>
 
-      {/* MAIN — 80vh */}
-      <main className="h-[80vh] overflow-y-auto px-6 py-10">
-        <div className="max-w-[1400px] mx-auto">
+        {/* ── FORM STEP ────────────────────────────────────────────────── */}
+        {step === "form" && (
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start">
+            {/* Left: Introduction & Tool Selection (7 Cols) */}
+            <div className="lg:col-span-7 space-y-10">
+              <div className="space-y-4">
+                <h1 className="text-5xl md:text-6xl font-black tracking-tight leading-[1.1]">
+                  AI Stack <span className="text-blue-500">Audit</span>.
+                </h1>
+                <p className="text-xl text-gray-400 max-w-xl leading-relaxed">
+                  Identify redundancies, over-provisioning, and hidden costs in your AI subscription portfolio.
+                </p>
+              </div>
 
-          <div className={step === "results" ? "" : "max-w-[780px] mx-auto"}>
-            <button
-              onClick={() => setStep("form")}
-              className="inline-flex items-center gap-2 text-[#666] hover:text-[#6d28d9] transition-colors mb-8 text-[14px] font-semibold group"
-            >
-              <ArrowLeft size={15} className="group-hover:-translate-x-1 transition-transform" />
-              {step === "results" ? "Start over" : "Back to home"}
-            </button>
-
-            {/* ── FORM ──────────────────────────────────────────────────── */}
-            {step === "form" && (
-              <div className="bg-white rounded-3xl border border-gray-100 shadow-[0_8px_30px_rgba(0,0,0,0.04)] p-10 space-y-8">
-                <div>
-                  <h1 className="text-[30px] font-extrabold tracking-tight mb-1">Run your AI Audit</h1>
-                  <p className="text-[#666] text-[15px]">Each field maps directly to what our engine needs.</p>
-                </div>
-
-                {/* ROW 1: email + company + role */}
-                <div className="grid grid-cols-3 gap-5">
-                  <Field label="email" hint="input_email">
-                    <input
-                      type="email" placeholder="alex@acme.com"
-                      value={email} onChange={e => setEmail(e.target.value)}
-                      className={inputCls}
-                    />
-                  </Field>
-                  <Field label="company" hint="input_company">
-                    <input
-                      type="text" placeholder="Acme Inc."
-                      value={company} onChange={e => setCompany(e.target.value)}
-                      className={inputCls}
-                    />
-                  </Field>
-                  <Field label="role" hint="input_role">
-                    <input
-                      type="text" placeholder="CTO / Finance"
-                      value={role} onChange={e => setRole(e.target.value)}
-                      className={inputCls}
-                    />
-                  </Field>
-                </div>
-
-                {/* Honeypot (Hidden) */}
-                <input 
-                  type="text" 
-                  name="_hp" 
-                  value={hp} 
-                  onChange={e => setHp(e.target.value)} 
-                  className="hidden" 
-                  tabIndex={-1} 
-                  autoComplete="off"
-                />
-
-                {/* ROW 2: tool selector */}
-                <Field label="tool" hint="input_tool · String — the AI tool being audited">
-                  <div className="grid grid-cols-4 gap-3">
-                    {ALL_TOOLS.map(t => {
-                      const active = tool === t.id;
-                      return (
-                        <button
-                          key={t.id}
-                          onClick={() => handleToolChange(t.id)}
-                          className={`flex flex-col items-center gap-2 p-3 rounded-2xl border-2 transition-all text-[12px] font-bold ${
-                            active
-                              ? "border-[#6d28d9] bg-[#f5f3ff] text-[#6d28d9]"
-                              : "border-gray-100 bg-[#F9FAFB] text-[#666] hover:border-[#6d28d9]/30"
-                          }`}
-                        >
-                          <t.Icon size={20} />
-                          {t.name}
-                        </button>
-                      );
-                    })}
+              <div className="glass rounded-[40px] p-8 space-y-8">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-lg bg-blue-500/20 text-blue-400 flex items-center justify-center">
+                    <Zap size={18} />
                   </div>
-                </Field>
+                  <h3 className="text-sm font-bold uppercase tracking-widest text-gray-300">Target Tool Analysis</h3>
+                </div>
 
-                {/* ROW 3: Plan, Team Size, Actual Spend (3 columns) */}
-                <div className="grid grid-cols-3 gap-5">
-                  <Field label="plan" hint="input_plan">
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                  {ALL_TOOLS.map(t => {
+                    const active = tool === t.id;
+                    return (
+                      <button
+                        key={t.id}
+                        onClick={() => handleToolChange(t.id)}
+                        className={`flex flex-col items-center justify-center gap-3 p-6 rounded-3xl border-2 transition-all group ${
+                          active
+                            ? "border-blue-500 bg-blue-500/10 text-white shadow-[0_0_30px_rgba(59,130,246,0.1)]"
+                            : "border-white/5 bg-white/[0.02] text-gray-500 hover:border-white/10 hover:bg-white/[0.04]"
+                        }`}
+                      >
+                        <t.Icon size={24} className={active ? "text-blue-400" : "group-hover:text-gray-300"} />
+                        <span className="text-[12px] font-bold tracking-tight">{t.name}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                  <Field label="Subscription Plan" icon={<FileText size={14}/>}>
                     <select
                       value={plan} onChange={e => handlePlanChange(e.target.value)}
                       className={inputCls}
                     >
                       {planOptions.map(p => (
-                        <option key={p} value={p} className="capitalize">{p}</option>
+                        <option key={p} value={p} className="bg-[#111] capitalize">{p}</option>
                       ))}
                     </select>
-                    <p className="text-[10px] text-[#999] mt-1 font-medium">Official price: ${selectedToolData?.plans[plan]?.price}/{selectedToolData?.plans[plan]?.type === 'per_user' ? 'user' : 'mo'}</p>
+                    <p className="text-[10px] text-gray-500 mt-2 font-medium">
+                      List Price: ${selectedToolData?.plans[plan]?.price}/{selectedToolData?.plans[plan]?.type === 'per_user' ? 'seat' : 'mo'}
+                    </p>
                   </Field>
 
-                  <Field label="teamSize" hint="input_team_size">
+                  <Field label="Team Size" icon={<User size={14}/>}>
                     <input
                       type="number" min={1} placeholder="10"
                       value={teamSize} onChange={e => setTeamSize(parseInt(e.target.value) || 1)}
                       className={inputCls}
                     />
                   </Field>
+                </div>
+              </div>
+            </div>
 
-                  <Field label="actual billing" hint="input_billing">
+            {/* Right: Personal Info & Submit (5 Cols) */}
+            <div className="lg:col-span-5 space-y-6">
+              <div className="glass rounded-[40px] p-8 space-y-6 border-blue-500/10">
+                <div className="flex items-center gap-3 mb-2">
+                  <div className="w-8 h-8 rounded-lg bg-blue-500/20 text-blue-400 flex items-center justify-center">
+                    <Mail size={18} />
+                  </div>
+                  <h3 className="text-sm font-bold uppercase tracking-widest text-gray-300">Audit Intelligence</h3>
+                </div>
+
+                <div className="space-y-4">
+                  <Field label="Work Email">
+                    <input
+                      type="email" placeholder="alex@company.com"
+                      value={email} onChange={e => setEmail(e.target.value)}
+                      className={inputCls}
+                    />
+                  </Field>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <Field label="Company">
+                      <input
+                        type="text" placeholder="Acme Inc"
+                        value={company} onChange={e => setCompany(e.target.value)}
+                        className={inputCls}
+                      />
+                    </Field>
+                    <Field label="Your Role">
+                      <input
+                        type="text" placeholder="CTO"
+                        value={role} onChange={e => setRole(e.target.value)}
+                        className={inputCls}
+                      />
+                    </Field>
+                  </div>
+
+                  <Field label="Actual Monthly Spend">
                     <div className="relative">
-                      <span className="absolute left-4 top-1/2 -translate-y-1/2 text-[#999] font-bold text-[15px]">$</span>
+                      <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 font-bold">$</span>
                       <input
                         type="number" min={0}
                         value={billing} onChange={e => setBilling(parseFloat(e.target.value) || 0)}
                         className={inputCls + " pl-8"}
                       />
                     </div>
-                    <p className="text-[10px] text-[#999] mt-1 font-medium italic">What you actually pay monthly</p>
                   </Field>
+
+                  <Field label="Usage Patterns / Tasks">
+                    <textarea
+                      rows={3} placeholder="E.g. Engineering team uses it for legacy code refactoring and PR reviews."
+                      value={tasks} onChange={e => setTasks(e.target.value)}
+                      className={inputCls + " resize-none min-h-[100px]"}
+                    />
+                  </Field>
+
+                  {/* Honeypot */}
+                  <input type="text" value={hp} onChange={e => setHp(e.target.value)} className="hidden" tabIndex={-1} />
+
+                  <button
+                    onClick={handleAnalyze}
+                    disabled={!email || !company || !tool || !plan || !teamSize}
+                    className="w-full bg-blue-600 hover:bg-blue-500 disabled:bg-gray-800 disabled:text-gray-600 text-white font-black py-5 rounded-2xl flex items-center justify-center gap-3 transition-all shadow-[0_10px_40px_rgba(59,130,246,0.3)] mt-6 group"
+                  >
+                    Start Analysis <ChevronRight size={20} className="group-hover:translate-x-1 transition-transform" />
+                  </button>
                 </div>
-
-                {/* ROW 5: tasks */}
-                <Field label="tasks" hint="input_tasks · String (Text) — how the team uses this tool">
-                  <textarea
-                    rows={3} placeholder="E.g. Engineers use it for code completion, 8h/day..."
-                    value={tasks} onChange={e => setTasks(e.target.value)}
-                    className={inputCls + " resize-none"}
-                  />
-                </Field>
-
-                {/* SUBMIT */}
-                <button
-                  onClick={handleAnalyze}
-                  disabled={!email || !company || !tool || !plan || !teamSize}
-                  className="w-full bg-[#6d28d9] hover:bg-[#5b21b6] disabled:bg-gray-300 text-white font-bold py-4 rounded-2xl flex items-center justify-center gap-2 transition-all shadow-lg shadow-[#6d28d9]/20 text-[16px]"
-                >
-                  Analyze Overpayments <ArrowRight size={20} />
-                </button>
               </div>
-            )}
-
-            {/* ── LOADING ──────────────────────────────────────────────── */}
-            {step === "loading" && (
-              <div className="bg-white rounded-3xl border border-gray-100 shadow-[0_8px_30px_rgba(0,0,0,0.04)] p-20 flex flex-col items-center text-center">
-                <div className="w-16 h-16 bg-[#f5f3ff] rounded-2xl flex items-center justify-center text-[#6d28d9] mb-6 animate-bounce">
-                  <Search size={32} />
-                </div>
-                <h2 className="text-[24px] font-extrabold mb-2">
-                  {progress < 20 ? "Security verification..." : `Analyzing ${company}'s stack...`}
-                </h2>
-                <p className="text-[#666] mb-8">
-                  {progress < 20 ? "Verifying request integrity." : "Running math engine across your audit data."}
-                </p>
-                <div className="w-full max-w-md bg-gray-100 h-2 rounded-full overflow-hidden">
-                  <div className="bg-[#6d28d9] h-full transition-all duration-300" style={{ width: `${progress}%` }} />
-                </div>
-                <p className="text-[12px] font-bold text-[#6d28d9] mt-3 uppercase tracking-widest">{progress}% complete</p>
-              </div>
-            )}
+            </div>
           </div>
+        )}
 
-          {/* ── RESULTS ──────────────────────────────────────────────── */}
-          {step === "results" && apiData && (
-            <div className="space-y-8 pb-20 animate-in fade-in slide-in-from-bottom-10 duration-700">
-              {/* 1. HERO VERDICT BAR */}
-              <div className="bg-[#111] rounded-[32px] p-10 text-white flex flex-col md:flex-row items-center justify-between gap-8 shadow-2xl relative overflow-hidden border border-white/10">
-                <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-r from-[#6d28d9]/20 to-transparent pointer-events-none" />
-                <div className="relative z-10">
-                  <p className="text-[14px] font-bold uppercase tracking-[0.3em] text-gray-400 mb-2">Audit Verdict</p>
-                  <h2 className="text-[28px] md:text-[36px] font-extrabold leading-tight max-w-[700px]">
+        {/* ── LOADING STEP ─────────────────────────────────────────────── */}
+        {step === "loading" && (
+          <div className="min-h-[60vh] flex flex-col items-center justify-center text-center max-w-2xl mx-auto space-y-12">
+            <div className="relative">
+              <div className="w-32 h-32 rounded-[40px] bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-500 animate-pulse">
+                <Search size={48} />
+              </div>
+              <div className="absolute inset-0 rounded-[40px] border border-blue-500/50 animate-ping opacity-20" />
+            </div>
+            
+            <div className="space-y-4">
+              <h2 className="text-4xl font-black tracking-tight">
+                {progress < 40 ? "Initializing Secure Audit..." : `Processing ${company} Data...`}
+              </h2>
+              <p className="text-gray-400 text-lg">
+                Our math engine is verifying pricing tiers against standard benchmarks.
+              </p>
+            </div>
+
+            <div className="w-full space-y-4">
+              <div className="w-full bg-white/5 h-3 rounded-full overflow-hidden border border-white/5">
+                <div 
+                  className="bg-gradient-to-r from-blue-600 to-cyan-400 h-full transition-all duration-500 ease-out shadow-[0_0_20px_rgba(59,130,246,0.5)]" 
+                  style={{ width: `${progress}%` }} 
+                />
+              </div>
+              <div className="flex justify-between items-center text-[10px] font-black uppercase tracking-[0.3em] text-blue-500">
+                <span>Engines Primed</span>
+                <span>{progress}% Complete</span>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ── RESULTS STEP ─────────────────────────────────────────────── */}
+        {step === "results" && apiData && (
+          <div className="space-y-8 animate-in fade-in slide-in-from-bottom-8 duration-1000">
+            {/* 1. HERO BENTO SECTION */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              {/* Verdict Card (2 Cols) */}
+              <div className="lg:col-span-2 glass rounded-[48px] p-10 flex flex-col justify-between relative overflow-hidden group">
+                <div className="absolute top-0 right-0 w-[400px] h-[400px] bg-blue-500/10 blur-[100px] -mr-20 -mt-20 group-hover:bg-blue-500/20 transition-all duration-700" />
+                <div className="relative z-10 space-y-6">
+                  <div className="flex items-center gap-3">
+                    <div className="bg-blue-500/20 text-blue-400 p-2 rounded-xl">
+                      <BrainCircuit size={20} />
+                    </div>
+                    <span className="text-[10px] font-black uppercase tracking-[0.4em] text-gray-500">Executive Summary</span>
+                  </div>
+                  <h2 className="text-4xl md:text-5xl font-black tracking-tight leading-[1.1] max-w-2xl">
                     {apiData.output_recommendation}
                   </h2>
                 </div>
-                <div className="flex gap-12 relative z-10 shrink-0">
-                  <div className="text-center md:text-right">
-                    <p className="text-[12px] font-bold uppercase tracking-widest text-[#10b981] mb-1">Annual Recovery</p>
-                    <p className="text-[48px] font-black tracking-tighter text-white">
-                      ${Number(apiData.output_annual_saving ?? 0).toLocaleString()}
-                    </p>
+                <div className="relative z-10 mt-12 pt-8 border-t border-white/5 flex items-center gap-6">
+                  <div className="flex items-center gap-3 text-gray-400 font-medium italic">
+                    <CheckCircle2 size={18} className="text-green-500" />
+                    Verified by Trace AI Engine
                   </div>
                 </div>
               </div>
 
-              {/* 2. MAIN INTELLIGENCE GRID */}
-              <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-                {/* LEFT: AI SUMMARY (60%) */}
-                <div className="lg:col-span-7 space-y-8">
-                  <div className="bg-white rounded-[40px] p-10 border border-gray-100 shadow-xl shadow-gray-200/40 relative">
-                    <div className="flex items-center gap-3 mb-6">
-                      <div className="w-10 h-10 rounded-xl bg-[#6d28d9]/10 text-[#6d28d9] flex items-center justify-center">
-                        <BrainCircuit size={22} />
-                      </div>
-                      <h3 className="text-[16px] font-extrabold text-[#111] uppercase tracking-widest">Executive Strategy</h3>
-                    </div>
-                    <div className="text-[18px] text-[#444] leading-[1.8] font-medium italic">
-                      {apiData.llm_raw_response?.summary || apiData.output_recommendation || "Our analysis indicates significant opportunities for stack optimization and billing recovery across your current toolset."}
-                    </div>
-                  </div>
-
-                  {/* FINANCIAL RECOVERY GRID */}
-                  {(() => {
-                    const reasons = apiData.output_savings_reason?.split(" | ") || [];
-                    const strategicKeys = ["redundancy", "overlap", "efficiency", "opportunity", "compliance", "potential", "growth", "security"];
-                    const financial = reasons.filter((r: string) => !strategicKeys.some(k => r.toLowerCase().includes(k)));
-
-                    return financial.length > 0 ? (
-                      <div className="space-y-6">
-                        <div className="flex items-center justify-between px-2">
-                          <h3 className="text-[14px] font-extrabold text-[#111] uppercase tracking-[0.2em] flex items-center gap-3">
-                            <span className="w-8 h-[2px] bg-[#10b981]" /> Financial Optimizations
-                          </h3>
-                        </div>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                          {financial.map((reasonRaw: string, idx: number) => {
-                            const reason = reasonRaw.replace(/\[CASE\d+\]/gi, "").trim();
-                            const hasArrow = reason.includes(" \u2192 ");
-                            
-                            const [spend, action, impactWithReason] = hasArrow 
-                              ? reason.split(" \u2192 ") 
-                              : ["Current Setup", reason, ""];
-                              
-                            const [impact, detailReason] = impactWithReason ? impactWithReason.split(". Reason: ") : [impactWithReason || "", ""];
-                            
-                            return (
-                              <div key={idx} className="p-8 rounded-[32px] border border-gray-100 bg-white hover:shadow-2xl hover:border-[#10b981]/20 transition-all flex flex-col gap-6">
-                                <div className="flex items-center justify-between">
-                                  <div className="w-10 h-10 rounded-xl bg-[#10b981]/10 text-[#10b981] flex items-center justify-center">
-                                    <ShieldCheck size={22} />
-                                  </div>
-                                  {impact && <div className="bg-[#111] text-white text-[11px] font-bold px-3 py-1 rounded-full max-w-[150px] truncate">{impact}</div>}
-                                </div>
-                                <div className="space-y-3">
-                                  {spend && <p className="text-[13px] font-bold text-gray-400 uppercase tracking-tight">{spend}</p>}
-                                  {spend && <div className="w-6 h-[2px] bg-gray-200" />}
-                                  <p className="text-[17px] font-extrabold text-[#111] leading-snug">{action}</p>
-                                </div>
-                                {detailReason && <p className="text-[13px] text-gray-500 leading-relaxed italic border-l-2 border-gray-100 pl-4">"{detailReason}"</p>}
-                              </div>
-                            );
-                          })}
-                        </div>
-                      </div>
-                    ) : null;
-                  })()}
-                </div>
-
-                {/* RIGHT: METRICS & STRATEGIC (40%) */}
-                <div className="lg:col-span-5 space-y-8">
-                  {/* AUDIT CONTEXT BOX */}
-                  <div className="bg-[#f8fafc] rounded-[40px] p-10 border border-[#e2e8f0] grid grid-cols-2 gap-8">
-                    <div>
-                      <p className="text-[10px] font-extrabold text-gray-400 uppercase tracking-widest mb-2">Company</p>
-                      <p className="text-[16px] font-bold text-[#111]">{apiData.input_company || "Audit Entity"}</p>
-                    </div>
-                    <div>
-                      <p className="text-[10px] font-extrabold text-gray-400 uppercase tracking-widest mb-2">Team Size</p>
-                      <p className="text-[16px] font-bold text-[#111]">{apiData.input_team_size} Seats</p>
-                    </div>
-                    <div>
-                      <p className="text-[10px] font-extrabold text-gray-400 uppercase tracking-widest mb-2">Current Tool</p>
-                      <div className="flex items-center gap-2">
-                        {(() => {
-                          const Icon = getIcon(apiData.input_tool_key);
-                          return <Icon size={16} className="text-[#6d28d9]" />;
-                        })()}
-                        <p className="text-[16px] font-bold text-[#111] capitalize">{apiData.input_tool_key?.replace("_", " ")}</p>
-                      </div>
-                    </div>
-                    <div>
-                      <p className="text-[10px] font-extrabold text-gray-400 uppercase tracking-widest mb-2">Monthly Burn</p>
-                      <p className="text-[16px] font-bold text-red-500">${Number(apiData.input_actual_billing).toLocaleString()}</p>
-                    </div>
-                  </div>
-
-                  {/* STRATEGIC INSIGHTS LIST */}
-                  {(() => {
-                    const reasons = apiData.output_savings_reason?.split(" | ") || [];
-                    const strategicKeys = ["redundancy", "overlap", "efficiency", "opportunity", "compliance", "potential", "growth", "security"];
-                    const strategic = reasons.filter((r: string) => strategicKeys.some(k => r.toLowerCase().includes(k)));
-
-                    return strategic.length > 0 ? (
-                      <div className="space-y-6">
-                        <div className="flex items-center gap-3 px-2">
-                          <h3 className="text-[14px] font-extrabold text-[#111] uppercase tracking-[0.2em]">Strategic Insights</h3>
-                        </div>
-                        <div className="space-y-4">
-                          {strategic.map((reasonRaw: string, idx: number) => {
-                            const reason = reasonRaw.replace(/\[CASE\d+\]/gi, "").trim();
-                            const isRedundant = reason.toLowerCase().includes("redundancy");
-                            const isGrowth = reason.toLowerCase().includes("growth");
-                            return (
-                              <div key={idx} className="p-6 rounded-3xl border border-[#ede9fe] bg-white flex items-start gap-4 hover:border-[#6d28d9]/30 transition-all">
-                                <div className="w-10 h-10 rounded-xl bg-[#f5f3ff] text-[#6d28d9] flex items-center justify-center shrink-0">
-                                  {isRedundant ? <Zap size={18} /> : isGrowth ? <TrendingUp size={18} /> : <Lock size={18} />}
-                                </div>
-                                <p className="text-[14px] text-[#4c1d95] font-medium leading-relaxed">{reason}</p>
-                              </div>
-                            );
-                          })}
-                        </div>
-                      </div>
-                    ) : null;
-                  })()}
-                </div>
-              </div>
-
-              {/* 3. CASE 5 BONUS FOOTER */}
-              {apiData.llm_raw_response?.additionalMonthlySavings > 0 && (
-                <div className="bg-gradient-to-br from-[#6d28d9] to-[#4c1d95] p-12 rounded-[40px] text-white relative overflow-hidden shadow-2xl group">
-                  <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-white opacity-5 blur-[100px] -mr-40 -mt-40 group-hover:opacity-10 transition-opacity" />
-                  <div className="flex flex-col md:flex-row items-center gap-12 relative z-10">
-                    <div className="flex-1 space-y-4">
-                      <div className="flex items-center gap-3">
-                        <div className="bg-white/20 p-3 rounded-2xl backdrop-blur-md">
-                          <GitFork size={32} />
-                        </div>
-                        <h4 className="text-[16px] font-extrabold uppercase tracking-[0.3em]">Bonus Recovery</h4>
-                      </div>
-                      <h3 className="text-[32px] md:text-[40px] font-black leading-tight">Switch tools and save an extra ${Number(apiData.llm_raw_response.additionalMonthlySavings * 12).toLocaleString()}/year.</h3>
-                      <p className="text-[18px] text-white/70 max-w-[600px] leading-relaxed">
-                        We found a competitor with matching capabilities at a fraction of the cost.
-                        We handle the migration for you.
-                      </p>
-                    </div>
-                    <button className="bg-white text-[#111] text-[18px] font-black px-10 py-6 rounded-[24px] hover:scale-105 transition-all shadow-2xl flex items-center gap-3 shrink-0">
-                      Explore Tool <ArrowRight size={24} />
-                    </button>
+              {/* Savings Card (1 Col) */}
+              <div className="bg-blue-600 rounded-[48px] p-10 flex flex-col justify-between shadow-[0_20px_50px_rgba(59,130,246,0.3)]">
+                <div className="space-y-1">
+                  <span className="text-[10px] font-black uppercase tracking-[0.4em] text-white/60">Annual Recovery</span>
+                  <div className="text-6xl font-black tracking-tighter text-white">
+                    ${Number(apiData.output_annual_saving ?? 0).toLocaleString()}
                   </div>
                 </div>
-              )}
-
-              {/* 4. STICKY CTA FOOTER */}
-              <div className="bg-white border border-gray-100 rounded-[32px] p-8 shadow-xl flex flex-col md:flex-row items-center justify-between gap-8">
-                <div>
-                  <h4 className="text-[20px] font-bold mb-1">Ready to capture these savings?</h4>
-                  <p className="text-gray-400">Our expert auditors handle the full implementation & negotiation.</p>
-                </div>
-                <div className="flex items-center gap-4">
-                  <button className="bg-[#6d28d9] text-white font-black px-8 py-4 rounded-2xl hover:bg-[#5b21b6] transition-all shadow-lg shadow-[#6d28d9]/20">
-                    Start Recovery Process
-                  </button>
-                  <button className="text-gray-400 font-bold px-6 py-4 hover:text-black transition-all">
-                    Download PDF Report
+                <div className="space-y-4">
+                  <div className="text-white/80 font-bold leading-tight">
+                    We've identified potential savings of ${Number(apiData.output_monthly_saving).toLocaleString()} per month.
+                  </div>
+                  <button className="w-full bg-white text-blue-600 font-black py-4 rounded-2xl hover:scale-105 transition-all">
+                    Claim Refund
                   </button>
                 </div>
               </div>
             </div>
-          )}
-        </div>
+
+            {/* 2. DETAIL GRID */}
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+              {/* Left Column (8 Cols) */}
+              <div className="lg:col-span-8 space-y-8">
+                {/* Strategic Breakdown */}
+                <div className="glass rounded-[40px] p-10 space-y-8">
+                  <h3 className="text-sm font-black uppercase tracking-[0.3em] text-gray-500 flex items-center gap-3">
+                    <div className="w-2 h-2 rounded-full bg-blue-500 shadow-[0_0_10px_rgba(59,130,246,1)]" />
+                    Intelligence Breakdown
+                  </h3>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {(() => {
+                      const reasons = apiData.output_savings_reason?.split(" | ") || [];
+                      return reasons.map((raw: string, i: number) => {
+                        const reason = raw.replace(/\[CASE\d+\]/gi, "").trim();
+                        const hasArrow = reason.includes(" \u2192 ");
+                        const parts = hasArrow ? reason.split(" \u2192 ") : ["Analysis", reason];
+                        
+                        return (
+                          <div key={i} className="bg-white/[0.03] border border-white/5 rounded-3xl p-8 space-y-4 hover:bg-white/[0.05] transition-all group">
+                            <div className="flex items-center justify-between">
+                              <div className="p-2 rounded-lg bg-white/5 text-blue-400 group-hover:scale-110 transition-transform">
+                                <Zap size={16} />
+                              </div>
+                              <span className="text-[10px] font-black text-gray-500 uppercase tracking-widest">{parts[0]}</span>
+                            </div>
+                            <p className="text-[15px] font-bold text-gray-200 leading-relaxed">
+                              {parts[1] || parts[0]}
+                            </p>
+                          </div>
+                        );
+                      });
+                    })()}
+                  </div>
+                </div>
+              </div>
+
+              {/* Right Column (4 Cols) */}
+              <div className="lg:col-span-4 space-y-8">
+                {/* Audit Context */}
+                <div className="glass rounded-[40px] p-8 border-white/5">
+                  <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-gray-500 mb-8">Audit Profile</h3>
+                  <div className="space-y-6">
+                    <ContextRow label="Entity" value={apiData.input_company} icon={<Building2 size={14}/>} />
+                    <ContextRow label="Seats" value={`${apiData.input_team_size} Users`} icon={<User size={14}/>} />
+                    <ContextRow 
+                      label="Current Tool" 
+                      value={apiData.input_tool_key?.replace("_", " ")} 
+                      icon={(() => {
+                        const Icon = getIcon(apiData.input_tool_key);
+                        return <Icon size={14} />;
+                      })()} 
+                    />
+                    <ContextRow label="Monthly Burn" value={`$${Number(apiData.input_actual_billing).toLocaleString()}`} icon={<DollarSign size={14}/>} color="text-red-400" />
+                  </div>
+                </div>
+
+                {/* Additional Insight if case 5 exists */}
+                {apiData.llm_raw_response?.additionalMonthlySavings > 0 && (
+                  <div className="bg-gradient-to-br from-indigo-600 to-purple-700 rounded-[40px] p-8 space-y-6 shadow-xl relative overflow-hidden group">
+                    <div className="absolute -bottom-10 -right-10 w-40 h-40 bg-white/10 blur-[50px] rounded-full group-hover:scale-150 transition-transform duration-1000" />
+                    <div className="flex items-center gap-3 relative z-10">
+                      <GitFork size={20} className="text-white" />
+                      <span className="text-[10px] font-black uppercase tracking-[0.3em] text-white/60">Migration Arbitrage</span>
+                    </div>
+                    <h4 className="text-xl font-bold text-white relative z-10 leading-tight">
+                      Switching to an alternative vendor could recover an extra <span className="text-yellow-300">${Number(apiData.llm_raw_response.additionalMonthlySavings * 12).toLocaleString()}/year.</span>
+                    </h4>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* 3. FINAL ACTION BAR */}
+            <div className="glass rounded-[40px] p-10 flex flex-col md:flex-row items-center justify-between gap-10">
+              <div className="space-y-2">
+                <h3 className="text-2xl font-bold">Ready to secure these savings?</h3>
+                <p className="text-gray-400 text-sm">Our team handles the vendor negotiations and migration strategy.</p>
+              </div>
+              <div className="flex items-center gap-4 w-full md:w-auto">
+                <button className="flex-1 md:flex-none bg-blue-600 hover:bg-blue-500 text-white font-black px-10 py-5 rounded-2xl shadow-lg transition-all">
+                  Start Recovery
+                </button>
+                <button 
+                  onClick={() => {
+                    const url = `${window.location.origin}/share/${apiData.id}`;
+                    navigator.clipboard.writeText(url);
+                    setCopied(true);
+                    setTimeout(() => setCopied(false), 2000);
+                  }}
+                  className={`flex-1 md:flex-none font-bold px-8 py-5 rounded-2xl border-2 transition-all ${
+                    copied 
+                      ? "bg-green-500/10 border-green-500 text-green-500" 
+                      : "border-white/10 text-gray-400 hover:text-white hover:border-white/30"
+                  }`}
+                >
+                  {copied ? "URL Copied!" : "Share Analysis"}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </main>
 
-      {/* FOOTER — 10vh */}
-      <footer className="h-[10vh] shrink-0 border-t border-gray-100 bg-white flex flex-col items-center justify-center gap-1.5">
-        <p className="text-[12px] text-[#888]">No sign-up. No credit card. Just the numbers.</p>
-        <div className="flex items-center gap-8">
-          {([
-            { Icon: ShieldCheck, label: "100% Free" },
-            { Icon: Zap, label: "Results in minutes" },
-            { Icon: Lock, label: "Your data stays private" },
-          ] as const).map(({ Icon, label }) => (
-            <div key={label} className="flex items-center gap-1.5 text-[13px] text-[#555] font-medium">
-              <Icon size={14} className="text-[#888]" /> {label}
+      {/* FOOTER */}
+      <footer className="border-t border-white/5 py-12 px-6">
+        <div className="max-w-7xl mx-auto flex flex-col items-center gap-6">
+          <div className="flex items-center gap-12 text-gray-500">
+            <div className="flex items-center gap-2 text-xs font-medium uppercase tracking-widest">
+              <ShieldCheck size={14}/> 100% Secure
             </div>
-          ))}
+            <div className="flex items-center gap-2 text-xs font-medium uppercase tracking-widest">
+              <Zap size={14}/> Real-time Data
+            </div>
+            <div className="flex items-center gap-2 text-xs font-medium uppercase tracking-widest">
+              <Lock size={14}/> Private Session
+            </div>
+          </div>
+          <p className="text-[10px] text-gray-600 font-bold uppercase tracking-[0.2em]">
+            © 2026 Trace AI Recovery. All Rights Reserved.
+          </p>
         </div>
       </footer>
     </div>
   );
 }
 
-// ─── Tiny helpers ────────────────────────────────────────────────────────────
-const inputCls =
-  "w-full bg-[#F9FAFB] border border-gray-200 rounded-xl px-4 py-3 text-[15px] font-medium focus:outline-none focus:ring-2 focus:ring-[#6d28d9]/20 focus:border-[#6d28d9] transition-all";
+// ─── STYLES & HELPERS ────────────────────────────────────────────────────────────
 
-function Field({ label, hint, children }: { label: string; hint?: string; children: React.ReactNode }) {
+const inputCls =
+  "w-full bg-white/[0.03] border border-white/10 rounded-2xl px-5 py-4 text-[15px] font-medium focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500/50 transition-all text-white placeholder:text-gray-600";
+
+function Field({ label, icon, children }: { label: string; icon?: React.ReactNode; children: React.ReactNode }) {
   return (
-    <div className="flex flex-col gap-1.5">
-      <div className="flex items-baseline gap-3">
-        <label className="text-[13px] font-extrabold text-[#111] uppercase tracking-wider">{label}</label>
-        {hint && <span className="text-[10px] text-[#aaa] font-mono">{hint}</span>}
-      </div>
+    <div className="flex flex-col gap-2.5">
+      <label className="text-[10px] font-black text-gray-500 uppercase tracking-[0.3em] flex items-center gap-2 ml-1">
+        {icon}
+        {label}
+      </label>
       {children}
+    </div>
+  );
+}
+
+function ContextRow({ label, value, icon, color = "text-white" }: { label: string; value: string; icon: React.ReactNode; color?: string }) {
+  return (
+    <div className="flex items-center justify-between">
+      <div className="flex items-center gap-3 text-gray-500">
+        <div className="w-6 h-6 rounded-lg bg-white/5 flex items-center justify-center">
+          {icon}
+        </div>
+        <span className="text-[11px] font-bold uppercase tracking-widest">{label}</span>
+      </div>
+      <span className={`text-[13px] font-black capitalize ${color}`}>{value}</span>
     </div>
   );
 }

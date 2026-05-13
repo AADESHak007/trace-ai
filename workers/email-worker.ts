@@ -23,7 +23,7 @@ const worker = new Worker(
 
     try {
       await transporter.sendMail({
-        from: process.env.SMTP_FROM || '"Trace AI" <no-reply@traceai.com>',
+        from: process.env.SMTP_FROM_EMAIL || '"Trace AI" <no-reply@traceai.com>',
         to,
         subject,
         text: body,
